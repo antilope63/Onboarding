@@ -38,12 +38,14 @@ export default function LoginPage() {
   }
 
   return (
+    //Fond gradient
     <div
       className="h-screen flex items-center justify-end p-12"
       style={{
         background: "conic-gradient(from 270deg at 50% 50%, #663bd6, #1d1e3b)",
       }}
     >
+        {/* Login form */}
       <section className="w-[800px] h-full text-center bg-white rounded-2xl shadow-xl border flex flex-col justify-center items-center gap-24 p-10">
         <div className="flex flex-col gap-0 items-center">
           <div className="flex items-center justify-center gap-5">
