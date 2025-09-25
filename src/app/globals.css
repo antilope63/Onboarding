@@ -47,6 +47,11 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
+  --color-noir: #04061D;
+  --color-violet_fonce_1: #663BD6;
+  --color-violet: #7D5AE0;
+  --color-bleu_fonce_1: #22254C;
+  --color-bleu_fonce_2: #1D1E3B;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
@@ -81,6 +86,11 @@
 .dark {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
+  --color-noir: #04061D;
+  --color-violet_fonce_1: #663BD6;
+  --color-violet: #7D5AE0;
+  --color-bleu_fonce_1: #22254C;
+  --color-bleu_fonce_2: #1D1E3B;
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
