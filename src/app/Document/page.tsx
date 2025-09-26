@@ -8,6 +8,7 @@ import {
   BookOpen,
   ArrowRight,
 } from "lucide-react"
+import BackButton from "@/components/BackButton" // ajuste le chemin si nécessaire
 
 type Document = {
   id: number
@@ -52,15 +53,18 @@ export default function DocumentsPage() {
   const [openDocId, setOpenDocId] = useState<number | null>(null)
 
   return (
-    <div className="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+    <div className="bg-noir font-sans text-gray-200 min-h-screen flex flex-col relative">
+      <div className="absolute top-4 left-4 z-10">
+        <BackButton label="Accueil" href="/" />
+      </div>
+
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900">
+            <h2 className="text-4xl font-bold text-violet-fonce-1">
               Documents importants
             </h2>
-            <p className="mt-2 text-lg text-gray-500">
+            <p className="mt-2 text-lg text-gray-400">
               Retrouvez ici tous vos documents essentiels pour bien démarrer.
             </p>
           </div>
@@ -72,30 +76,28 @@ export default function DocumentsPage() {
               return (
                 <div
                   key={doc.id}
-                  onClick={() =>
-                    setOpenDocId(isOpen ? null : doc.id)
-                  }
-                  className="group flex flex-col p-6 rounded-lg bg-white shadow-sm transition-all duration-300 cursor-pointer"
+                  onClick={() => setOpenDocId(isOpen ? null : doc.id)}
+                  className="group flex flex-col p-6 rounded-lg bg-bleu_fonce_2 shadow-sm transition-all duration-300 cursor-pointer"
                 >
                   {/* Ligne principale : icône + titre à gauche, flèche à droite */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                      <div className="w-12 h-12 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                      <div className="w-12 h-12 flex items-center justify-center bg-violet-fonce-1/10 text-violet group-hover:bg-violet group-hover:text-white rounded-lg transition-colors duration-300">
                         {doc.icon}
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">
+                        <h3 className="text-lg font-bold text-violet-fonce-1">
                           {doc.title}
                         </h3>
-                        <p className="text-sm text-gray-500">{doc.description}</p>
+                        <p className="text-sm text-gray-400">{doc.description}</p>
                       </div>
                     </div>
 
                     {/* Flèche à droite */}
                     <ArrowRight
                       className={`text-gray-400 transition-transform duration-300
-                        group-hover:text-blue-600 ${
-                          isOpen ? "rotate-90 text-blue-600" : ""
+                        group-hover:text-violet ${
+                          isOpen ? "rotate-90 text-violet" : ""
                         }`}
                       size={24}
                     />
@@ -103,7 +105,7 @@ export default function DocumentsPage() {
 
                   {/* Partie qui s’affiche seulement si la carte est ouverte avec animation */}
                   <div
-                    className={`overflow-hidden transition-all duration-700 ease-in-out
+                    className={`overflow-hidden transition-all duration-500 ease-in-out
                       ${isOpen ? "max-h-[700px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"}`}
                   >
                     <iframe
@@ -111,7 +113,6 @@ export default function DocumentsPage() {
                       className="w-full h-[700px] border rounded-lg"
                       title={doc.title}
                     />
-                    
                   </div>
                 </div>
               )
