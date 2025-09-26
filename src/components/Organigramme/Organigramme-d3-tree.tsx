@@ -5,10 +5,8 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrgNode } from "@/types/org";
 
-// On charge react-d3-tree en client-only pour éviter tout souci SSR.
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
-// Conversion vers le format attendu par react-d3-tree
 type RawNodeDatum = {
   name: string;
   attributes?: Record<string, string | number | boolean>;
@@ -16,19 +14,29 @@ type RawNodeDatum = {
 };
 
 function toRaw(node: OrgNode): RawNodeDatum {
+  const baseChildren = (node.children ?? []).map(toRaw);
+  const syntheticTeamLeaf: RawNodeDatum[] =
+    typeof node.count === "number"
+      ? [
+          {
+            name: `Équipe : ${node.count}`,
+            attributes: { type: "team-count" },
+          },
+        ]
+      : [];
+
   return {
     name: node.name,
     attributes: {
       Rôle: node.title,
-      ...(typeof node.count === "number" ? { Équipe: node.count } : {}),
+      Image: node.image ?? "",
     },
-    children: node.children?.map(toRaw),
+    children: [...baseChildren, ...syntheticTeamLeaf],
   };
 }
 
 type Props = {
   data: OrgNode;
-  // largeur/hauteur du viewport “canvas”
   width?: number;
   height?: number;
 };
@@ -36,7 +44,6 @@ type Props = {
 export default function OrgD3Tree({ data }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Translate pour centrer le root au démarrage
   const [translate, setTranslate] = useState<{ x: number; y: number }>({
     x: 0,
     y: 100,
@@ -45,51 +52,65 @@ export default function OrgD3Tree({ data }: Props) {
   useEffect(() => {
     if (!wrapperRef.current) return;
     const rect = wrapperRef.current.getBoundingClientRect();
-    // centre horizontalement le root, laisse 100px de marge top
-    // setTranslate({ x: rect.width / 5, y: 400 });
     setTranslate({ x: rect.width / 2, y: 100 });
   }, []);
 
-  // Données au format react-d3-tree
   const treeData = useMemo(() => toRaw(data), [data]);
 
   return (
     <div ref={wrapperRef} className="w-full h-[80vh]">
       <Tree
         data={treeData}
-        orientation="vertical" // arbre descendant
-        pathFunc="elbow" // lignes orthogonales
+        orientation="vertical"
+        pathFunc="elbow"
         zoomable={false}
         draggable={false}
-        translate={translate} // centre initial
-        collapsible={false} // on garde tout ouvert
-        // Espace entre nœuds (px) : X = horizontal, Y = vertical
-        nodeSize={{ x: 430, y: 150 }}
-        // Séparation relative des nœuds (affine l’espacement horizontal/vertical)
-        separation={{ siblings: 0.6, nonSiblings: 0.6 }}
-        // Styles gérés via renderCustomNodeElement et props par défaut
-        // On rend un contenu HTML riche via foreignObject si tu veux une “card” Tailwind :
+        translate={translate}
+        collapsible={false}
+        nodeSize={{ x: 220, y: 180 }}
+        separation={{ siblings: 0.7, nonSiblings: 0.9 }}
         renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
-          // on récupère les attributs injectés depuis OrgNode
+          const type = nodeDatum.attributes?.["type"] as string | undefined;
           const role = nodeDatum.attributes?.["Rôle"];
-          const equipe = nodeDatum.attributes?.["Équipe"];
+          const img = (nodeDatum.attributes?.["Image"] as string) || "";
+
+          if (type === "team-count") {
+            return (
+              <g cursor="default">
+                <foreignObject x={-50} y={-16} width={100} height={32}>
+                  <div className="px-2 py-1 text-[11px] font-medium text-white bg-violet rounded-full w-fit mx-auto">
+                    {nodeDatum.name}
+                  </div>
+                </foreignObject>
+              </g>
+            );
+          }
+
           return (
             <g onClick={toggleNode} cursor="default">
-              <foreignObject x={-110} y={-28} width={220} height={64}>
-                <div className="relative z-10 flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-md shadow-sm">
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-violet leading-tight">
-                      {String(role ?? "")}
-                    </span>
-                    <span className="text-sm font-semibold leading-tight">
-                      {nodeDatum.name}
-                    </span>
-                  </div>
-                  {typeof equipe === "number" && (
-                    <span className="ml-auto px-2 py-1 text-[11px] font-medium text-white bg-violet rounded-full">
-                      Équipe : {String(equipe)}
-                    </span>
+              {/* Card verticale compacte */}
+              <foreignObject x={-80} y={-60} width={160} height={120}>
+                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-white border border-gray-200 rounded-md shadow-sm w-[160px]">
+                  {/* Avatar */}
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={nodeDatum.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200" />
                   )}
+
+                  {/* Texte */}
+                  <div className="text-center leading-tight">
+                    <div className="text-[11px] text-violet truncate max-w-[140px] mx-auto">
+                      {String(role ?? "")}
+                    </div>
+                    <div className="text-sm font-semibold truncate max-w-[140px] mx-auto">
+                      {nodeDatum.name}
+                    </div>
+                  </div>
                 </div>
               </foreignObject>
             </g>
