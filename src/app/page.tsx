@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div className="relative min-h-[100svh] bg-[#0B0E16] overflow-hidden">
+    <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
       {/* ORB au-dessus (pas masqué) */}
       <div className="pointer-events-none absolute inset-0 grid place-items-center z-20">
         {/* léger halo pour le relief du bord */}
@@ -22,47 +22,47 @@ export default function Home() {
       >
         <div className="grid h-full grid-cols-12 grid-rows-4 gap-6">
           {/* A - Bloc gauche haut */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2">
-            A
-          </div>
+          <div className="rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]"></div>
 
           {/* B - Hero centre */}
-          <div className="bg-[#7D5AE0] rounded-[32px] p-6 lg:col-span-6 lg:row-span-2">
-            B
+          <div className="bg-[#7D5AE0] rounded-[32px] p-6 lg:col-span-6 lg:row-span-2 border border-white/7 bg-radial-[at_50%_100%] from-[#805CE3] from-30% via-[#683DD9]  to-[#663AD8]">
+            <div className="text-white text-8xl font-bold flex items-center justify-center text-center">
+              Pixelpay <br /> Onboarding
+            </div>
           </div>
 
           {/* C - Petit pilule haut droite */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-linear-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]">
             C
           </div>
 
           {/* D - Stats droite */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-linear-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]">
             D
           </div>
 
           {/* E - Petit bloc sous A */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-linear-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]">
             E
           </div>
 
           {/* F - Branching paths */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-tr from-[#1B1B37] via-[#1F2245] to-[#25284F]">
             F
           </div>
 
           {/* G - Keyword enhancer */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-tr from-[#1B1B37] via-[#1F2245] to-[#25284F]">
             G
           </div>
 
           {/* H - Prompt templates droite */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]">
             H
           </div>
 
           {/* I - Bouton bas gauche */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-linear-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]">
             I
           </div>
         </div>
