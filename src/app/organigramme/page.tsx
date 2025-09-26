@@ -1,5 +1,6 @@
 import BackButton from "@/components/BackButton";
-import OrgChart from "@/components/Organigramme";
+import OrgChart from "@/components/Organigramme/Organigramme";
+import OrgD3Tree from "@/components/Organigramme/Organigramme-d3-tree";
 import { data } from "./data";
 
 export default function OrganigrammePage() {
@@ -12,9 +13,10 @@ export default function OrganigrammePage() {
       <h1 className="text-2xl font-bold">Organigramme</h1>
 
       {/* Composant organigramme */}
-      <div className="w-full max-w-5xl overflow-x-auto">
+      {/* <div className="w-full max-w-5xl overflow-x-auto">
         <OrgChart root={data} />
-      </div>
+      </div> */}
+      <OrgD3Tree data={data} />
     </section>
   );
 }

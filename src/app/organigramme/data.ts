@@ -1,4 +1,4 @@
-import type { OrgNode } from "@/components/Organigramme";
+import type { OrgNode } from "@/types/org";
 
 export const data: OrgNode = {
   id: "ceo",
