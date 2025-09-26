@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 const LoginSchema = z.object({
   email: z
     .string()
+    .min(1, "Email requis")
     .email("Email invalide")
     .regex(/@pixelplay\.com$/i, "Utilisez une adresse @pixelplay.com"),
   password: z.string().nonempty("Mot de passe requis"),
@@ -40,19 +41,19 @@ export default function LoginPage() {
   return (
     //Fond gradient
     <div
-      className="h-screen flex items-center justify-end p-12"
+      className="h-screen flex items-center justify-end"
       style={{
-        background: "conic-gradient(from 270deg at 50% 50%, #663bd6, #1d1e3b)",
+        background: "conic-gradient(from 270deg at 40% 50%, #663bd6, #1d1e3b)",
       }}
     >
-        {/* Login form */}
-      <section className="w-[800px] h-full text-center bg-white rounded-2xl shadow-xl border flex flex-col justify-center items-center gap-24 p-10">
+      {/* Login form */}
+      <section className="w-1/2 h-full text-center bg-white shadow-xl border flex flex-col justify-center items-center gap-34 p-10 pb-40">
         <div className="flex flex-col gap-0 items-center">
           <div className="flex items-center justify-center gap-5">
-            <p className="text-6xl mb-4" aria-hidden>
+            <p className="text-7xl mb-4" aria-hidden>
               👋
             </p>
-            <h1 className="text-4xl font-semibold tracking-tight">
+            <h1 className="text-5xl font-semibold tracking-tight">
               Bienvenue chez PixelPlay
             </h1>
           </div>
@@ -78,7 +79,7 @@ export default function LoginPage() {
                       <Input
                         type="email"
                         placeholder="email@exemple.com"
-                        className="pr-12 rounded-full h-12"
+                        className="pr-12 rounded-full h-12 border-black/30"
                         {...field}
                       />
                     </FormControl>
@@ -122,7 +123,7 @@ export default function LoginPage() {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder={showPassword ? "Test123" : "••••••••"}
-                        className="pr-12 rounded-full h-12"
+                        className="pr-12 rounded-full h-12 border-black/30"
                         {...field}
                       />
                     </FormControl>
