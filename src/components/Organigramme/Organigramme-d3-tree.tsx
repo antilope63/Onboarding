@@ -67,7 +67,7 @@ export default function OrgD3Tree({ data }: Props) {
         draggable={false}
         translate={translate}
         collapsible={false}
-        nodeSize={{ x: 220, y: 180 }}
+        nodeSize={{ x: 220, y: 140 }}
         separation={{ siblings: 0.7, nonSiblings: 0.9 }}
         renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
           const type = nodeDatum.attributes?.["type"] as string | undefined;
