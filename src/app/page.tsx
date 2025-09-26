@@ -1,3 +1,7 @@
+"use client";
+
+import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
+
 export default function Home() {
   return (
     <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
@@ -5,7 +9,14 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-0 grid place-items-center z-20">
         {/* léger halo pour le relief du bord */}
         <div className="w-[calc(2*var(--r)+40px)] h-[calc(2*var(--r)+40px)] rounded-full bg-black/60 blur-[24px] opacity-30" />
-        {/* orb centrale (placeholder) */}
+        <CircularProgress
+          strokeWidth={18}
+          size={350}
+          from="#A855F7"
+          to="#6366F1"
+          trackColor="#02061B"
+        />
+
         <div className="w-[calc(2*var(--r))] h-[calc(2*var(--r))] rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] opacity-90" />
       </div>
 
@@ -14,7 +25,7 @@ export default function Home() {
         className={[
           "h-[100svh] p-8 z-10",
           // masque radial centré : transparent jusqu'à --r (le trou), opaque au-delà
-          "[--r:clamp(140px,22vmin,260px)]",
+          "[--r:clamp(140px,22vmin,190px)]",
           "[mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[-webkit-mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[mask-repeat:no-repeat] [mask-position:center] [mask-size:100%_100%]",
@@ -52,7 +63,7 @@ export default function Home() {
           </div>
 
           {/* G - Keyword enhancer */}
-          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-tr from-[#1B1B37] via-[#1F2245] to-[#25284F]">
+          <div className="bg-[#7D5AE0] rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-linear-to-tl from-[#1B1B37] via-[#1F2245] to-[#25284F]">
             G
           </div>
 
