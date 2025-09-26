@@ -1,35 +1,12 @@
-"use client";
-import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
-import { useEffect, useState } from "react";
-
 export default function Home() {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    const step = (prev: number) => (prev === 100 ? 0 : prev + 10);
-    setValue(step);
-    const id = setInterval(() => setValue(step), 2000);
-    return () => clearInterval(id);
-  }, []);
-
   return (
     <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
-      {/* ORB centré */}
-      <div className="absolute inset-0 grid place-items-center z-20 pointer-events-none">
-        {/* cercle violet (fond) */}
+      {/* ORB au-dessus (pas masqué) */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center z-20">
+        {/* léger halo pour le relief du bord */}
+        <div className="w-[calc(2*var(--r)+40px)] h-[calc(2*var(--r)+40px)] rounded-full bg-black/60 blur-[24px] opacity-30" />
+        {/* orb centrale (placeholder) */}
         <div className="w-[calc(2*var(--r))] h-[calc(2*var(--r))] rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] opacity-90" />
-
-        {/* contenu visible dans le cercle */}
-        <div className="absolute inset-0 grid place-items-center z-30 pointer-events-auto">
-          <AnimatedCircularProgressBar
-            value={value}
-            gaugePrimaryColor="rgb(79 70 229)"
-            gaugeSecondaryColor="rgba(0, 0, 0, 0.1)"
-          />
-        </div>
-
-        {/* halo au-dessus (optionnel) */}
-        <div className="w-[calc(2*var(--r)+40px)] h-[calc(2*var(--r)+40px)] rounded-full bg-black/60 blur-[24px] opacity-30 absolute" />
       </div>
 
       {/* WRAPPER + MASQUE (toutes les cards sont “creusées” par ce masque) */}
@@ -37,7 +14,7 @@ export default function Home() {
         className={[
           "h-[100svh] p-8 z-10",
           // masque radial centré : transparent jusqu'à --r (le trou), opaque au-delà
-          "[--r:260px]",
+          "[--r:clamp(140px,22vmin,260px)]",
           "[mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[-webkit-mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[mask-repeat:no-repeat] [mask-position:center] [mask-size:100%_100%]",
