@@ -6,25 +6,45 @@ export const data: OrgNode = {
   name: "Whitney Blessing",
   image: "/Organigramme/Luffy.jpeg",
   children: [
+    
     {
-      id: "cpo",
-      title: "CPO",
-      name: "Greg Wise",
+      id: "cto",
+      title: "CTO",
+      name: "Alex Martin",
       image: "/Organigramme/Shrek.jpg",
       children: [
+        
         {
-          id: "vp-design",
-          title: "VP of Design",
-          name: "Annie Bailey",
+          id: "vp-data",
+          title: "VP Data",
+          name: "Henry Adams",
           image: "/Organigramme/Nami.jpeg",
-          count: 8,
+          children: [
+            { id: "dir-data-a", title: "Director", name: "Sarah Collins", image: "/Organigramme/Nami.jpeg", children: [
+              { id: "dir-data-a-a", title: "Director", name: "Sarah Collins", image: "/Organigramme/Nami.jpeg", count: 12 },
+              { id: "dir-data-a-a", title: "Director", name: "Sarah Collins", image: "/Organigramme/Nami.jpeg", count: 12 },] },
+          ],
         },
+      ],
+    },
+    {
+      id: "coo",
+      title: "COO",
+      name: "Emma Johnson",
+      image: "/Organigramme/Shrek.jpg",
+      children: [
+        { id: "vp-ops", title: "VP Ops", name: "James Wright",  image: "/Organigramme/Nami.jpeg", count: 20 },
+        { id: "vp-hr",  title: "VP HR",  name: "Isabella Lee",  image: "/Organigramme/Nami.jpeg", count: 15 },
         {
-          id: "vp-marketing",
-          title: "VP of Marketing",
-          name: "Micheal Graves",
+          id: "vp-eng",
+          title: "VP Eng",
+          name: "Sophia Clark",
           image: "/Organigramme/Nami.jpeg",
-          count: 12,
+          // On répartit le 22 en 12 + 10
+          children: [
+            { id: "dir-eng-a", title: "Director", name: "Mark Evans",   image: "/Organigramme/Nami.jpeg", count: 12 },
+            { id: "dir-eng-b", title: "Director", name: "Grace Miller", image: "/Organigramme/Nami.jpeg", count: 10 },
+          ],
         },
       ],
     },
@@ -34,23 +54,11 @@ export const data: OrgNode = {
       name: "Alexis Gibson",
       image: "/Organigramme/Shrek.jpg",
       children: [
-        {
-          id: "vp-finance",
-          title: "VP of Finance",
-          name: "Teresa Ward",
-          image: "/Organigramme/Nami.jpeg",
-          count: 6,
-        },
-        {
-          id: "vp-sales",
-          title: "VP of Sales",
-          name: "Victor Rose",
-          image: "/Organigramme/Nami.jpeg",
-          count: 10,
-        },
+        { id: "vp-fin",  title: "VP Finance", name: "Teresa Ward", image: "/Organigramme/Nami.jpeg", count: 15 },
+        { id: "vp-sales",title: "VP Sales",   name: "Victor Rose", image: "/Organigramme/Nami.jpeg", children: [
+          { id: "dir-sales-a", title: "Director", name: "Sarah Collins", image: "/Organigramme/Nami.jpeg", count: 12 },
+        ] },
       ],
     },
   ],
 };
-
-

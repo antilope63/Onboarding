@@ -33,12 +33,12 @@ type Props = {
   height?: number;
 };
 
-export default function OrgD3Tree({ data, width = 1400, height = 800 }: Props) {
+export default function OrgD3Tree({ data }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Translate pour centrer le root au démarrage
   const [translate, setTranslate] = useState<{ x: number; y: number }>({
-    x: width / 2,
+    x: 0,
     y: 100,
   });
 
@@ -46,6 +46,7 @@ export default function OrgD3Tree({ data, width = 1400, height = 800 }: Props) {
     if (!wrapperRef.current) return;
     const rect = wrapperRef.current.getBoundingClientRect();
     // centre horizontalement le root, laisse 100px de marge top
+    // setTranslate({ x: rect.width / 5, y: 400 });
     setTranslate({ x: rect.width / 2, y: 100 });
   }, []);
 
@@ -53,7 +54,7 @@ export default function OrgD3Tree({ data, width = 1400, height = 800 }: Props) {
   const treeData = useMemo(() => toRaw(data), [data]);
 
   return (
-    <div ref={wrapperRef} className="w-full h-full" style={{ width, height }}>
+    <div ref={wrapperRef} className="w-full h-[80vh]">
       <Tree
         data={treeData}
         orientation="vertical" // arbre descendant
@@ -63,9 +64,9 @@ export default function OrgD3Tree({ data, width = 1400, height = 800 }: Props) {
         translate={translate} // centre initial
         collapsible={false} // on garde tout ouvert
         // Espace entre nœuds (px) : X = horizontal, Y = vertical
-        nodeSize={{ x: 240, y: 140 }}
+        nodeSize={{ x: 430, y: 150 }}
         // Séparation relative des nœuds (affine l’espacement horizontal/vertical)
-        separation={{ siblings: 1.2, nonSiblings: 1.6 }}
+        separation={{ siblings: 0.6, nonSiblings: 0.6 }}
         // Styles gérés via renderCustomNodeElement et props par défaut
         // On rend un contenu HTML riche via foreignObject si tu veux une “card” Tailwind :
         renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
