@@ -1,69 +1,124 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { FileText, Download } from "lucide-react"
-import Image from "next/image"
+"use client"
+
+import { useState } from "react"
+import {
+  FileText,
+  Laptop,
+  ShieldCheck,
+  BookOpen,
+  ArrowRight,
+} from "lucide-react"
 
 type Document = {
   id: number
   title: string
   description: string
   url: string
+  icon: React.ReactNode
 }
 
 const documents: Document[] = [
-  { id: 1, title: "Contrat de travail", description: "Votre contrat de travail signé", url: "/contrat.pdf" },
-  { id: 2, title: "Charte informatique", description: "Règles et bonnes pratiques IT", url: "/charte-informatique.pdf" },
-  { id: 3, title: "Mutuelle", description: "Informations sur votre mutuelle", url: "/mutuelle.pdf" },
-  { id: 4, title: "Livret d’accueil", description: "Toutes les infos pour bien démarrer", url: "/livret.pdf" },
+  {
+    id: 1,
+    title: "Contrat de travail",
+    description: "Consultez et téléchargez votre contrat de travail.",
+    url: "/contrat.pdf",
+    icon: <FileText className="w-6 h-6" />,
+  },
+  {
+    id: 2,
+    title: "Charte IT",
+    description: "Révisez la charte informatique de l'entreprise.",
+    url: "/charte-informatique.pdf",
+    icon: <Laptop className="w-6 h-6" />,
+  },
+  {
+    id: 3,
+    title: "Mutuelle",
+    description: "Informations sur votre couverture santé.",
+    url: "/mutuelle.pdf",
+    icon: <ShieldCheck className="w-6 h-6" />,
+  },
+  {
+    id: 4,
+    title: "Livret d’accueil",
+    description: "Découvrez l'entreprise, sa culture et ses valeurs.",
+    url: "/livret.pdf",
+    icon: <BookOpen className="w-6 h-6" />,
+  },
 ]
 
 export default function DocumentsPage() {
+  const [openDocId, setOpenDocId] = useState<number | null>(null)
+
   return (
-    <div className="container mx-auto p-6">
-      
-      <div className="mb-6">
-        <Image src="/logo.png" alt="Logo" width={120} height={40} />
-      </div>
+    <div className="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900">
+              Documents importants
+            </h2>
+            <p className="mt-2 text-lg text-gray-500">
+              Retrouvez ici tous vos documents essentiels pour bien démarrer.
+            </p>
+          </div>
 
-      {/* Titre principal */}
-      <h1 className="text-4xl font-extrabold mb-2">
-        Mes documents
-      </h1>
+          {/* Liste des documents */}
+          <div className="space-y-4">
+            {documents.map((doc) => {
+              const isOpen = openDocId === doc.id
+              return (
+                <div
+                  key={doc.id}
+                  onClick={() =>
+                    setOpenDocId(isOpen ? null : doc.id)
+                  }
+                  className="group flex flex-col p-6 rounded-lg bg-white shadow-sm transition-all duration-300 cursor-pointer"
+                >
+                  {/* Ligne principale : icône + titre à gauche, flèche à droite */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="w-12 h-12 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        {doc.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">
+                          {doc.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">{doc.description}</p>
+                      </div>
+                    </div>
 
-      {/* Sous-titre */}
-      <p className="text-gray-500 mb-8">
-        Retrouvez tous les documents nécessaires pour votre onboarding
-      </p>
+                    {/* Flèche à droite */}
+                    <ArrowRight
+                      className={`text-gray-400 transition-transform duration-300
+                        group-hover:text-blue-600 ${
+                          isOpen ? "rotate-90 text-blue-600" : ""
+                        }`}
+                      size={24}
+                    />
+                  </div>
 
-      {/* Grille des cartes */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {documents.map((doc) => (
-          <Card
-            key={doc.id}
-            className="rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                <FileText className="w-5 h-5 text-blue-600" />
-                {doc.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-4">{doc.description}</p>
-              <Button
-                asChild
-                className="w-full flex items-center justify-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
-                variant="outline"
-              >
-                <a href={doc.url} download>
-                  <Download className="w-4 h-4" />
-                  Télécharger
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  {/* Partie qui s’affiche seulement si la carte est ouverte avec animation */}
+                  <div
+                    className={`overflow-hidden transition-all duration-700 ease-in-out
+                      ${isOpen ? "max-h-[700px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"}`}
+                  >
+                    <iframe
+                      src={doc.url}
+                      className="w-full h-[700px] border rounded-lg"
+                      title={doc.title}
+                    />
+                    
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
