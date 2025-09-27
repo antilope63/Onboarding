@@ -62,7 +62,7 @@ export default function OrgD3Tree({ data }: Props) {
       <Tree
         data={treeData}
         orientation="vertical"
-        pathFunc="elbow"
+        pathFunc="step" // "diagonal" ou "elbow" ou "straight" ou "step"
         zoomable={false}
         draggable={false}
         translate={translate}
@@ -90,7 +90,7 @@ export default function OrgD3Tree({ data }: Props) {
             <g onClick={toggleNode} cursor="default">
               {/* Card verticale compacte */}
               <foreignObject x={-80} y={-60} width={160} height={120}>
-                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-white border border-gray-200 rounded-md shadow-sm w-[160px]">
+                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px]">
                   {/* Avatar */}
                   {img ? (
                     <img
@@ -99,15 +99,15 @@ export default function OrgD3Tree({ data }: Props) {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200" />
+                    <div className="w-10 h-10 rounded-full bg-gray-400" />
                   )}
 
                   {/* Texte */}
                   <div className="text-center leading-tight">
-                    <div className="text-[11px] text-violet truncate max-w-[140px] mx-auto">
+                    <div className="text-[11px] text-gray-400 font-bold truncate max-w-[140px] mx-auto">
                       {String(role ?? "")}
                     </div>
-                    <div className="text-sm font-semibold truncate max-w-[140px] mx-auto">
+                    <div className="text-sm font-semibold text-white truncate max-w-[140px] mx-auto">
                       {nodeDatum.name}
                     </div>
                   </div>
@@ -115,6 +115,20 @@ export default function OrgD3Tree({ data }: Props) {
               </foreignObject>
             </g>
           );
+        }}
+        pathClassFunc={(linkDatum) => {
+          // Récupère le rôle du parent (source)
+          const parentRole = linkDatum.source?.data?.attributes?.["Rôle"] as
+            | string
+            | undefined;
+          if (!parentRole) return "branch-default";
+
+          if (parentRole === "CEO") return "branch-ceo";
+          if (parentRole === "CTO") return "branch-cto";
+          if (parentRole === "COO") return "branch-coo";
+          if (parentRole === "CFO") return "branch-cfo";
+          if (parentRole?.includes("VP")) return "branch-vp";
+          return "branch-default";
         }}
       />
     </div>
