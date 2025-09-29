@@ -20,7 +20,7 @@ export default function LinkText({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center mt-4 gap-3 hover:underline hover:cursor-pointer text-lg text-white text-nowrap w-min"
+      className="flex items-center gap-3 hover:underline hover:cursor-pointer text-lg text-white"
     >
       <Image src={icon} alt={text} width={sizeIcon} height={sizeIcon} />
       <span style={{ fontSize: sizeText, fontWeight: sizeFont }}>{text}</span>
