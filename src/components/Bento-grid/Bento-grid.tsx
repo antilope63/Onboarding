@@ -5,9 +5,9 @@ import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import {
   BellIcon,
   CalendarIcon,
+  ClipboardIcon,
   FileTextIcon,
   GlobeIcon,
-  InputIcon,
 } from "@radix-ui/react-icons";
 
 export default function Bento_Doug() {
@@ -20,7 +20,7 @@ export default function Bento_Doug() {
 
   const features = [
     {
-      Icon: FileTextIcon,
+      Icon: ClipboardIcon,
       name: "Vos tâches",
       description: `vous etes a la phase n°${phaseNumber}`,
       href: "/",
@@ -33,21 +33,22 @@ export default function Bento_Doug() {
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/20 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
     {
-      Icon: InputIcon,
-      name: "Full text search",
-      description: "Search through all your files in one place.",
+      name: "Hero",
       href: "/",
-      cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      cta: "",
+      Icon: () => null,
+      layout: "center", // NEW
       className:
-        "rounded-[32px] p-6 lg:col-span-6 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
+        "rounded-[32px] lg:col-span-6 lg:row-span-2 border border-white/10 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
+      children: (
+        <div className="text-white text-8xl font-extrabold leading-[0.95] botom-4">
+          Pixelpay <br /> Onboarding
+        </div>
+      ),
     },
     {
       Icon: GlobeIcon,
-      name: "Multilingual",
+      name: "Organigramme",
       description: "Supports 100+ languages and counting.",
       href: "/",
       cta: "Learn more",
@@ -60,7 +61,7 @@ export default function Bento_Doug() {
     },
     {
       Icon: CalendarIcon,
-      name: "Calendar",
+      name: "documentation",
       description: "Use the calendar to filter your files by date.",
       href: "/",
       cta: "Learn more",
@@ -72,8 +73,8 @@ export default function Bento_Doug() {
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]",
     },
     {
-      Icon: BellIcon,
-      name: "Notifications",
+      Icon: FileTextIcon,
+      name: "mes acces",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
@@ -83,11 +84,11 @@ export default function Bento_Doug() {
       ctaColor: `${ctacolor}`,
       descriptionColor: `${descriptioncolor}`,
       className:
-        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
+        "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
     {
       Icon: BellIcon,
-      name: "test222",
+      name: "mes documents",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
@@ -101,7 +102,7 @@ export default function Bento_Doug() {
     },
     {
       Icon: BellIcon,
-      name: "test3333",
+      name: "follow up / rdv",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
@@ -115,7 +116,7 @@ export default function Bento_Doug() {
     },
     {
       Icon: BellIcon,
-      name: "test4444",
+      name: "Mes formations",
 
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
@@ -127,6 +128,20 @@ export default function Bento_Doug() {
       descriptionColor: `${descriptioncolor}`,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
+    },
+    {
+      Icon: FileTextIcon,
+      name: "Notifications",
+      description:
+        "Get notified when someone shares a file or mentions you in a comment.",
+      href: "/",
+      cta: "Learn more",
+      iconColor: `${Iconcolor}`,
+      nameColor: `${namecolor}`,
+      ctaColor: `${ctacolor}`,
+      descriptionColor: `${descriptioncolor}`,
+      className:
+        "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
   ];
 
