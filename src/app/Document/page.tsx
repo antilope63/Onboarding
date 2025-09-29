@@ -62,8 +62,7 @@ export default function DocumentsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-violet-fonce-1">
-              Documents importants
-            </h2>
+              Mes documents            </h2>
             <p className="mt-2 text-lg text-gray-400">
               Retrouvez ici tous vos documents essentiels pour bien démarrer.
             </p>
