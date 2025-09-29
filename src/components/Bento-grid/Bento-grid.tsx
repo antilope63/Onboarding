@@ -1,18 +1,26 @@
+// app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
+
 import { getPhaseStats, phases } from "@/app/Tâches/data";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
+import { cn } from "@/lib/utils";
 import {
-  BellIcon,
+  BackpackIcon,
   CalendarIcon,
-  ClipboardIcon,
-  FileTextIcon,
   GlobeIcon,
+  IdCardIcon,
+  ListBulletIcon,
+  LockClosedIcon,
+  ReaderIcon,
+  RocketIcon,
 } from "@radix-ui/react-icons";
+import Image from "next/image";
 
 export default function Bento_Doug() {
-  const { activeIndex, done, total, percent } = getPhaseStats(phases);
+  const { activeIndex } = getPhaseStats(phases);
   const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
+
   const Iconcolor = "text-white/90";
   const namecolor = "text-white/90";
   const descriptioncolor = "text-white/70";
@@ -20,28 +28,29 @@ export default function Bento_Doug() {
 
   const features = [
     {
-      Icon: ClipboardIcon,
+      Icon: ListBulletIcon,
       name: "Vos tâches",
       description: `vous etes a la phase n°${phaseNumber}`,
       href: "/",
       cta: "Go au tâches",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/20 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
+    // HERO CENTRE
     {
       name: "Hero",
       href: "/",
       cta: "",
       Icon: () => null,
-      layout: "center", // NEW
+      layout: "center",
       className:
         "rounded-[32px] lg:col-span-6 lg:row-span-2 border border-white/10 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
       children: (
-        <div className="text-white text-8xl font-extrabold leading-[0.95] botom-4">
+        <div className="text-white text-8xl font-extrabold leading-[0.95] translate-y-[-5rem] ">
           Pixelpay <br /> Onboarding
         </div>
       ),
@@ -52,94 +61,153 @@ export default function Bento_Doug() {
       description: "Supports 100+ languages and counting.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]",
     },
     {
       Icon: CalendarIcon,
-      name: "documentation",
+      name: "follow up",
       description: "Use the calendar to filter your files by date.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]",
     },
     {
-      Icon: FileTextIcon,
+      Icon: LockClosedIcon,
       name: "mes acces",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
     {
-      Icon: BellIcon,
+      Icon: IdCardIcon,
       name: "mes documents",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
-        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-gradient-to-tl from-[#1B1B37] via-[#1F2245] to-[#25284F]",
+        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_100%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
     },
     {
-      Icon: BellIcon,
-      name: "follow up / rdv",
+      Icon: ReaderIcon,
+      name: "documentation",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
-        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]",
+        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_0%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
     },
+    // BOÎTE À OUTILS (logos interactifs)
     {
-      Icon: BellIcon,
-      name: "Mes formations",
+      Icon: BackpackIcon,
+      name: "Boîte à Outils",
+      description:
+        "Get notified when someone shares a file or mentions you in a comment.",
+      href: "/",
+      cta: "Learn more",
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
+      background: (
+        <div className="relative h-full w-full">
+          {/* gradient de base */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]" />
 
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
-      href: "/",
-      cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+          {/* grille de logos interactive */}
+          <div className="absolute inset-0 z-0 grid grid-cols-2 place-items-center h-1/2">
+            {[
+              {
+                src: "/Github_b.svg",
+                alt: "GitHub",
+                glow: "rgba(139,92,246,.45)",
+              },
+              {
+                src: "/Unity_B.svg",
+                alt: "Unity",
+                glow: "rgba(99,102,241,.45)",
+              },
+              {
+                src: "/Notion_B.svg",
+                alt: "Notion",
+                glow: "rgba(236,72,153,.45)",
+              },
+              {
+                src: "/Figma_b.svg",
+                alt: "Figma",
+                glow: "rgba(34,197,94,.45)",
+              },
+            ].map((l) => (
+              <div
+                key={l.alt}
+                className={cn(
+                  "transition-all duration-300 cursor-pointer",
+                  "opacity-80 blur-[0.5px]",
+                  // dim all on group hover, highlight hovered tile
+                  "group-hover/logos:opacity-60 hover:opacity-100 hover:blur-0",
+                  // micro-interactions
+                  "hover:-translate-y-1 hover:scale-105 hover:brightness-125"
+                )}
+                style={{
+                  filter: "drop-shadow(0 0 0 rgba(0,0,0,0))",
+                }}
+                onMouseEnter={(e) => {
+                  // ajoute un glow coloré via style inline pour chaque logo
+                  (
+                    e.currentTarget as HTMLDivElement
+                  ).style.filter = `drop-shadow(0 6px 20px ${l.glow})`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.filter =
+                    "drop-shadow(0 0 0 rgba(0,0,0,0))";
+                }}
+              >
+                <Image src={l.src} alt={l.alt} width={64} height={64} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
       className:
-        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
+        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
     },
     {
-      Icon: FileTextIcon,
-      name: "Notifications",
+      Icon: RocketIcon,
+      name: "Mes formations",
       description:
         "Get notified when someone shares a file or mentions you in a comment.",
       href: "/",
       cta: "Learn more",
-      iconColor: `${Iconcolor}`,
-      nameColor: `${namecolor}`,
-      ctaColor: `${ctacolor}`,
-      descriptionColor: `${descriptioncolor}`,
+      iconColor: Iconcolor,
+      nameColor: namecolor,
+      ctaColor: ctacolor,
+      descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
@@ -160,7 +228,7 @@ export default function Bento_Doug() {
         <div className="w-[calc(2*var(--r))] h-[calc(2*var(--r))] rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] opacity-90" />
       </div>
 
-      {/* WRAPPER + MASQUE (les cards sont “creusées”) */}
+      {/* WRAPPER + MASQUE */}
       <div
         className={[
           "relative h-[100svh] p-8 z-10",
@@ -170,7 +238,6 @@ export default function Bento_Doug() {
           "[mask-repeat:no-repeat] [mask-position:center] [mask-size:100%_100%]",
         ].join(" ")}
       >
-        {/* 👉 Le BentoGrid doit être DEDANS et prendre la hauteur */}
         <BentoGrid className="grid h-full grid-cols-12 grid-rows-4 gap-6">
           {features.map((f) => (
             <BentoCard key={f.name} {...f} />

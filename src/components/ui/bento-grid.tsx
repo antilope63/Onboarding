@@ -13,7 +13,7 @@ interface BentoGridProps extends ComponentPropsWithoutRef<"div"> {
 
 interface BentoCardProps extends ComponentPropsWithoutRef<"div"> {
   name: string;
-  className: string; // mets bg + border ici
+  className: string; // mets border + bg gradient ici
   Icon: React.ElementType;
 
   // Couleurs paramétrables
@@ -30,6 +30,9 @@ interface BentoCardProps extends ComponentPropsWithoutRef<"div"> {
   // Layout spécial "hero" centré
   layout?: "default" | "center";
   children?: ReactNode; // utilisé quand layout="center"
+
+  // Background optionnel (affiché derrière le contenu)
+  background?: ReactNode;
 }
 
 const BentoGrid = ({ children, className, ...props }: BentoGridProps) => {
@@ -59,12 +62,13 @@ const BentoCard = ({
   cta = "Learn more",
   layout = "default",
   children,
+  background,
   ...props
 }: BentoCardProps) => (
   <div
     key={name}
     className={cn(
-      "group relative col-span-3 overflow-hidden rounded-xl",
+      "group group/logos relative col-span-3 overflow-hidden rounded-xl",
       // ombre MagicUI
       "[box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
       "dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]",
@@ -72,16 +76,19 @@ const BentoCard = ({
     )}
     {...props}
   >
+    {/* Background optionnel au-dessus pour capter le hover */}
+    {background && <div className="absolute inset-0 z-0">{background}</div>}
+
     {layout === "center" ? (
       // --- HERO CENTRÉ ---
-      <div className="absolute inset-0 grid place-items-start p-6 pt-12 text-center ml-[7rem]">
+      <div className="absolute inset-0 grid place-items-center p-6 text-center pointer-events-none">
         {children}
       </div>
     ) : (
       // --- LAYOUT PAR DÉFAUT : contenu aligné en bas ---
       <>
-        <div className="relative z-10 flex h-full flex-col p-4">
-          <div className="pointer-events-none mt-auto transform-gpu transition-all duration-300 lg:group-hover:-translate-y-10">
+        <div className="relative z-10 flex h-full flex-col p-4 pointer-events-none">
+          <div className="mt-auto transform-gpu transition-all duration-300 lg:group-hover:-translate-y-10">
             <Icon
               className={cn(
                 "h-12 w-12 origin-left transform-gpu transition-all duration-300 ease-in-out group-hover:scale-75",
@@ -98,8 +105,8 @@ const BentoCard = ({
             )}
           </div>
 
-          {/* CTA mobile (collé en bas) */}
-          <div className="pointer-events-none flex w-full transform-gpu flex-row items-center transition-all duration-300 group-hover:opacity-100 lg:hidden">
+          {/* CTA mobile (cliquable) */}
+          <div className="flex w-full lg:hidden">
             <Button
               variant="link"
               asChild
@@ -114,8 +121,8 @@ const BentoCard = ({
           </div>
         </div>
 
-        {/* CTA desktop (absolu bas) */}
-        <div className="pointer-events-none absolute bottom-0 hidden w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:flex z-10">
+        {/* CTA desktop (cliquable) */}
+        <div className="pointer-events-none absolute bottom-0 hidden w-full translate-y-10 transform-gpu items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:flex z-10">
           <Button
             variant="link"
             asChild
