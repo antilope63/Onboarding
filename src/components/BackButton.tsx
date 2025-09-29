@@ -25,8 +25,8 @@ export default function BackButton({
         aria-label={label}
         className="group inline-flex items-center gap-1 no-underline"
       >
-        <ArrowLeftIcon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
-        <span className="font-medium">{label}</span>
+        <ArrowLeftIcon className="text-white w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
+        <span className="font-medium text-white">{label}</span>
       </Link>
     </div>
   );
