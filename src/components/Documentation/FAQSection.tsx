@@ -87,7 +87,7 @@ export default function FAQSection({
       el.removeEventListener("scroll", updateFades as EventListener);
       window.removeEventListener("resize", updateFades);
     };
-  }, []);
+  }, [fadeTop, fadeBottom, perspective, perspectiveScaleMin, perspectiveZone]);
 
   const topSoft = Math.max(0, Math.round(fadeTopPx * 0.6));
   const bottomSoft = Math.max(0, Math.round(fadeBottomPx * 0.6));

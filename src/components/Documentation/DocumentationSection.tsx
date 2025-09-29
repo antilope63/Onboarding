@@ -23,9 +23,9 @@ export default function DocumentationSection({
         sonseillons de le sauvegarder 😉
       </p>
       <p className="text-white/70 text-sm">
-        Pour se connecter, utilise l'accès à ton compte google de l'entreprise
-        dont les accès sont disponibles dans la section "Mes accès" sur la page
-        d'accueil.
+        Pour se connecter, utilise l&apos;accès à ton compte google de
+        l&apos;entreprise dont les accès sont disponibles dans la section
+        &quot;Mes accès&quot; sur la page d&apos;accueil.
       </p>
       <Button className="w-[200px] flex items-center justify-center px-4 h-12 bg-violet_fonce_1 hover:bg-violet hover:cursor-pointer">
         <Link
