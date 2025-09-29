@@ -44,7 +44,7 @@ export default function FAQSection({ className, ...rest }: FAQSectionProps) {
             return acc;
           }, {})
         ).map(([category, items]) => (
-          <section key={category} className="mb-16">
+          <section key={category} className="mb-16 bg-bleu_fonce_2 p-4 rounded-lg">
             <h3 className="text-white font-semibold text-4xl mb-2">
               {category}
             </h3>
