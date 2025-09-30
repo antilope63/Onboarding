@@ -24,7 +24,7 @@ export const suivis: Suivi[] = [
   {
     id: "1",
     titre: "Entretien avec le Manager",
-    type: "1:1",
+    type: "Manager",
     date: "Demain, 10:00",
     statut: "Obligatoire",
     couleur: "vert",
