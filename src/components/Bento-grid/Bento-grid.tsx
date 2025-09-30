@@ -2,7 +2,7 @@
 "use client";
 
 import { Task, getPhaseStats, phases } from "@/app/Tâches/data";
-import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+import { BentoCard, BentoGrid, type BentoCardProps } from "@/components/ui/bento-grid";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -66,7 +66,7 @@ export default function Bento_Doug() {
     },
   ];
 
-  const features = [
+  const features: BentoCardProps[] = [
     {
       Icon: ListBulletIcon,
       name: "Tâches",
