@@ -4,12 +4,83 @@ import NavBar from "@/components/NavBar";
 import SessionCard from "@/components/Formation/SessionCard";
 import { sessions } from "./data";
 import NoScroll from "@/components/NoScroll";
-import { useRef, useState, type KeyboardEvent, type WheelEventHandler } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type WheelEventHandler,
+} from "react";
+
+const LOOP_MULTIPLIER = 7;
+const BUFFER_CYCLES = 2;
 
 export default function FormationPage() {
+  const baseLength = sessions.length;
+  const middleCycle = Math.floor(LOOP_MULTIPLIER / 2);
+  const totalCards = baseLength * LOOP_MULTIPLIER;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const cycleWidthRef = useRef(0);
+  const isAdjustingRef = useRef(false);
+
+  if (cardsRef.current.length !== totalCards) {
+    cardsRef.current = Array.from({ length: totalCards }, () => null);
+  }
+
+  const normalizeLoopIndex = useCallback(
+    (baseIndex: number) =>
+      baseLength === 0 ? 0 : middleCycle * baseLength + baseIndex,
+    [baseLength, middleCycle]
+  );
+
+  const updateCycleWidth = useCallback(() => {
+    if (baseLength === 0) return;
+    const first = cardsRef.current[0];
+    const nextCycleStart = cardsRef.current[baseLength];
+    if (!first || !nextCycleStart) return;
+    cycleWidthRef.current = nextCycleStart.offsetLeft - first.offsetLeft;
+  }, [baseLength]);
+
+  const centerCard = (loopIndex: number, behavior: ScrollBehavior = "smooth") => {
+    const slider = sliderRef.current;
+    const card = cardsRef.current[loopIndex];
+    if (!slider || !card) return;
+
+    const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
+    slider.scrollTo({ left: target, behavior });
+  };
+
+  useEffect(() => {
+    if (baseLength === 0) return;
+
+    let frame = requestAnimationFrame(function ensureCentered() {
+      const slider = sliderRef.current;
+      const card = cardsRef.current[normalizeLoopIndex(0)];
+      if (!slider || !card) {
+        frame = requestAnimationFrame(ensureCentered);
+        return;
+      }
+
+      const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
+      slider.scrollTo({ left: target, behavior: "auto" });
+      updateCycleWidth();
+    });
+
+    const handleResize = () => {
+      requestAnimationFrame(updateCycleWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [baseLength, middleCycle, normalizeLoopIndex, updateCycleWidth]);
 
   // Pas d'auto-défilement vertical
   const handleWheel: WheelEventHandler<HTMLDivElement> = (event) => {
@@ -22,26 +93,66 @@ export default function FormationPage() {
     slider.scrollBy({ left: event.deltaY, behavior: "smooth" });
   };
 
-  const centerCard = (index: number) => {
+  const handleScrollBounds = useCallback(() => {
+    if (isAdjustingRef.current) return;
     const slider = sliderRef.current;
-    const card = cardsRef.current[index];
-    if (!slider || !card) return;
+    const width = cycleWidthRef.current;
+    if (!slider || !width || baseLength === 0) return;
 
-    const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
-    slider.scrollTo({ left: target, behavior: "smooth" });
+    const buffer = Math.min(BUFFER_CYCLES, middleCycle);
+    const lowerBound = buffer;
+    const upperBound = LOOP_MULTIPLIER - buffer;
+
+    const scrollLeft = slider.scrollLeft;
+    const cycleIndex = Math.floor(scrollLeft / width);
+    const offsetWithinCycle = scrollLeft - cycleIndex * width;
+
+    if (cycleIndex < lowerBound || cycleIndex >= upperBound) {
+      isAdjustingRef.current = true;
+      const target = offsetWithinCycle + middleCycle * width;
+      slider.scrollTo({ left: target, behavior: "auto" });
+      requestAnimationFrame(() => {
+        isAdjustingRef.current = false;
+      });
+    }
+  }, [baseLength, middleCycle]);
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || baseLength === 0) return;
+
+    const onScroll = () => handleScrollBounds();
+
+    slider.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      slider.removeEventListener("scroll", onScroll);
+    };
+  }, [baseLength, handleScrollBounds]);
+
+  const activateCard = (loopIndex: number) => {
+    if (baseLength === 0) return;
+
+    const baseIndex = ((loopIndex % baseLength) + baseLength) % baseLength;
+    setCurrentIndex(baseIndex);
+    requestAnimationFrame(() => {
+      centerCard(normalizeLoopIndex(baseIndex));
+    });
   };
 
-  const activateCard = (index: number) => {
-    setCurrentIndex(index);
-    centerCard(index);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, index: number) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, loopIndex: number) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      activateCard(index);
+      activateCard(loopIndex);
     }
   };
+
+  if (baseLength === 0) {
+    return (
+      <section className="flex min-h-screen items-center justify-center bg-noir text-white">
+        <p>Aucune session disponible.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="relative flex min-h-screen w-full flex-col items-center justify-center gap-16 overflow-hidden bg-noir py-20">
@@ -55,18 +166,21 @@ export default function FormationPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-[1100px]">
+      <div className="w-full">
         <div
           ref={sliderRef}
-          className="no-scrollbar flex gap-6 overflow-x-auto overflow-y-hidden px-6 pb-6 pt-2 text-white scroll-smooth snap-x snap-mandatory"
+          className="no-scrollbar flex gap-6 overflow-x-auto overflow-y-hidden px-12 pb-6 pt-2 text-white scroll-smooth snap-x snap-mandatory"
           onWheel={handleWheel}
         >
-          {sessions.map((session, idx) => {
-            const isActive = idx === currentIndex;
+          {Array.from({ length: totalCards }, (_, idx) => {
+            const baseIndex = idx % baseLength;
+            const session = sessions[baseIndex];
+            const cycle = Math.floor(idx / baseLength);
+            const isActive = baseIndex === currentIndex;
 
             return (
               <div
-                key={session.id}
+                key={`${session.id}-cycle-${cycle}`}
                 ref={(el) => {
                   cardsRef.current[idx] = el;
                 }}
