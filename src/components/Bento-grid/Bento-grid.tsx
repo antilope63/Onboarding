@@ -315,7 +315,7 @@ export default function Bento_Doug() {
     {
       Icon: RocketIcon,
       name: "Mes formations",
-      description: "Tu as besoin d'aide ? Forme-toi !",
+      description: `Tu as besoin d'aide ? Forme-toi !`,
       href: "/",
       cta: "J'ai besoin d'aide",
       iconColor: Iconcolor,
