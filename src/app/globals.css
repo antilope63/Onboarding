@@ -154,3 +154,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Couleurs des branches */
+.branch-default { stroke: #ffffff; }
+
+path.rd3t-link {
+  stroke: #ffffff !important;
+  stroke-width: 3px !important;
+  fill: none !important;
+}
