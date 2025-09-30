@@ -47,17 +47,17 @@ export default function LoginPage() {
       }}
     >
       {/* Login form */}
-      <section className="w-1/2 h-full text-center bg-white shadow-xl border flex flex-col justify-center items-center gap-34 p-10 pb-40">
-        <div className="flex flex-col gap-0 items-center">
+      <section className="w-1/2 h-full text-center bg-noir flex flex-col justify-center items-center gap-34 p-10 pb-40">
+        <div className="flex flex-col items-center">
           <div className="flex items-center justify-center gap-5">
             <p className="text-7xl mb-4" aria-hidden>
               👋
             </p>
-            <h1 className="text-5xl font-semibold tracking-tight">
+            <h1 className="text-5xl text-white font-semibold tracking-tight">
               Bienvenue chez PixelPlay
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="-mt-1 text-sm text-white">
             Connectez-vous à votre compte pour accéder à votre espace.
           </p>
         </div>
@@ -73,13 +73,13 @@ export default function LoginPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-white text-md pl-1">Email</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="email@exemple.com"
-                        className="pr-12 rounded-full h-12 border-black/30"
+                        className="pr-12 rounded-full h-12 text-white border-0 bg-bleu_fonce_2"
                         {...field}
                       />
                     </FormControl>
@@ -92,7 +92,7 @@ export default function LoginPage() {
                   </div>
                   <div
                     className={cn(
-                      "grid transition-[grid-template-rows,margin] duration-200 ease-out",
+                      "grid transition-[grid-template-rows,margin] duration-200 pl-1 ease-out",
                       form.formState.errors.email
                         ? "grid-rows-[1fr] -mt-1.5 mb-3"
                         : "grid-rows-[0fr] mt-0"
@@ -117,20 +117,20 @@ export default function LoginPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mot de passe</FormLabel>
+                  <FormLabel className="text-white text-md pl-1">Mot de passe</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder={showPassword ? "Test123" : "••••••••"}
-                        className="pr-12 rounded-full h-12 border-black/30"
+                        className="pr-12 rounded-full h-12 text-white border-0 bg-bleu_fonce_2"
                         {...field}
                       />
                     </FormControl>
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-base text-muted-foreground hover:bg-accent"
+                      className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 hover:bg-violet_fonce_1"
                       aria-label={
                         showPassword
                           ? "Masquer le mot de passe"
@@ -142,7 +142,7 @@ export default function LoginPage() {
                   </div>
                   <div
                     className={cn(
-                      "grid transition-[grid-template-rows,margin] duration-200 ease-out",
+                      "grid transition-[grid-template-rows,margin] duration-200 pl-1 ease-out",
                       form.formState.errors.password
                         ? "grid-rows-[1fr] -mt-1.5"
                         : "grid-rows-[0fr] mt-0"
@@ -164,11 +164,7 @@ export default function LoginPage() {
             />
             <Button
               type="submit"
-              className="w-full cursor-pointer h-12 mt-6 rounded-full text-base font-semibold"
-              style={{
-                backgroundColor: "var(--color-violet)",
-                color: "white",
-              }}
+              className="w-full cursor-pointer h-12 mt-7 rounded-full text-base font-semibold bg-violet_fonce_1 hover:bg-violet"
             >
               Connexion
             </Button>
