@@ -264,7 +264,7 @@ export default function FormationPage() {
       </div>
 
       <div className="text-center text-white flex flex-col items-center gap-4 max-w-[600px]">
-        <Button className="rounded-full bg-violet_fonce_1 hover:bg-violet text-md p-6">
+        <Button className="rounded-full bg-violet_fonce_1 hover:bg-violet text-md p-6 cursor-pointer">
           Réserver une session 🤝
         </Button>
         <p className="text-white/70">{sessions[currentIndex]?.description}</p>

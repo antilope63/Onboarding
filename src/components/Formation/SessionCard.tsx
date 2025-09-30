@@ -36,12 +36,12 @@ export default function SessionCard({
         priority={isActive}
       />
       <div
-        className={`absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent transition-opacity duration-300 ${
           isActive ? "opacity-60" : "opacity-90"
         }`}
       />
 
-      <div className="relative z-10 flex flex-col p-2 px-4 bg-white rounded-2xl">
+      <div className="relative z-10 flex flex-col p-2 px-4 bg-white/80 backdrop-blur-sm rounded-2xl">
         <h3 className="text-xl font-semibold text-black">{title}</h3>
         <p className="text-sm text-black/70">{subtitle}</p>
       </div>
