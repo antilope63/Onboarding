@@ -1,9 +1,11 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
+import { AnimatedBeamBento } from "./animated_beam_bento";
 import { Task, getPhaseStats, phases } from "@/app/Tâches/data";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
+import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
 import {
   BackpackIcon,
@@ -39,6 +41,29 @@ export default function Bento_Doug() {
     done: "bg-emerald-500/15 text-emerald-200 border-emerald-400/30",
     verified: "bg-violet-500/15 text-violet-200 border-violet-400/30",
   };
+
+  const files = [
+    {
+      name: "bitcoin.pdf",
+      body: "Bitcoin is a cryptocurrency invented in 2008 by an unknown person or group of people using the name Satoshi Nakamoto.",
+    },
+    {
+      name: "finances.xlsx",
+      body: "A spreadsheet or worksheet is a file made of rows and columns that help sort data, arrange data easily, and calculate numerical data.",
+    },
+    {
+      name: "logo.svg",
+      body: "Scalable Vector Graphics is an Extensible Markup Language-based vector image format for two-dimensional graphics with support for interactivity and animation.",
+    },
+    {
+      name: "keys.gpg",
+      body: "GPG keys are used to encrypt and decrypt email, files, directories, and whole disk partitions and to authenticate messages.",
+    },
+    {
+      name: "seed.txt",
+      body: "A seed phrase, seed recovery phrase or backup seed phrase is a list of words which store all the information needed to recover Bitcoin funds on-chain.",
+    },
+  ];
 
   const features = [
     {
@@ -175,6 +200,33 @@ export default function Bento_Doug() {
       descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_100%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
+      background: (
+        <Marquee
+          pauseOnHover
+          className="absolute top-10 [mask-image:linear-gradient(to_top,transparent_40%,#000_100%)] [--duration:20s]"
+        >
+          {files.map((f, idx) => (
+            <figure
+              key={idx}
+              className={cn(
+                "relative w-32 cursor-pointer overflow-hidden rounded-xl border p-4 text-white",
+                "border-white bg-gray-950/[.01] hover:bg-gray-950/[.05]",
+                "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+                "transform-gpu blur-[1px] transition-all duration-300 ease-out hover:blur-none"
+              )}
+            >
+              <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-col">
+                  <figcaption className="text-sm font-medium text-white">
+                    {f.name}
+                  </figcaption>
+                </div>
+              </div>
+              <blockquote className="mt-2 text-xs">{f.body}</blockquote>
+            </figure>
+          ))}
+        </Marquee>
+      ),
     },
     {
       Icon: ReaderIcon,
@@ -189,6 +241,9 @@ export default function Bento_Doug() {
       descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_0%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
+      background: (
+        <AnimatedBeamBento />
+      ),
     },
     // BOÎTE À OUTILS (logos interactifs)
     {
