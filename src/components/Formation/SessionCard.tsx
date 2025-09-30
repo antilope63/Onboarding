@@ -1,10 +1,16 @@
 import Image from "next/image";
+import Avatar from "@/components/Formation/Avatar";
 
 export type SessionCardProps = {
   title: string;
   subtitle: string;
   image: string;
   isActive: boolean;
+  formatter: {
+    name: string;
+    role: string;
+    image: string;
+  };
 };
 
 export default function SessionCard({
@@ -12,13 +18,12 @@ export default function SessionCard({
   subtitle,
   image,
   isActive,
+  formatter,
 }: SessionCardProps) {
   return (
-    <article
-      className={`relative flex h-[340px] w-[240px] flex-col justify-end overflow-hidden rounded-3xl border transition-[transform,box-shadow] duration-300 ${
-        isActive
-          ? "border-white/70 shadow-[0_20px_35px_rgba(10,10,23,0.45)]"
-          : "border-white/10 shadow-none"
+    <section
+      className={`relative flex h-[250px] w-[420px] p-2 flex-col justify-end overflow-hidden rounded-3xl border transition-[transform,box-shadow] duration-300 ${
+        isActive ? "border-white/70" : "border-white/10 cursor-pointer"
       }`}
       aria-label={title}
     >
@@ -36,10 +41,10 @@ export default function SessionCard({
         }`}
       />
 
-      <div className="relative z-10 flex flex-col gap-1 px-5 pb-6">
-        <h3 className="text-xl font-semibold text-white">{title}</h3>
-        <p className="text-sm text-white/70">{subtitle}</p>
+      <div className="relative z-10 flex flex-col p-2 bg-white rounded-2xl">
+        <h3 className="text-lg font-semibold text-black">{title}</h3>
+        <p className="text-xs text-black/70">{subtitle}</p>
       </div>
-    </article>
+    </section>
   );
 }

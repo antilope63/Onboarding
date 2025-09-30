@@ -12,6 +12,7 @@ import {
   type KeyboardEvent,
   type WheelEventHandler,
 } from "react";
+import Avatar from "@/components/Formation/Avatar";
 
 const LOOP_MULTIPLIER = 7;
 const BUFFER_CYCLES = 2;
@@ -61,12 +62,16 @@ export default function FormationPage() {
     slider.scrollTo({ left, behavior });
   };
 
-  const centerCard = (loopIndex: number, behavior: ScrollBehavior = "smooth") => {
+  const centerCard = (
+    loopIndex: number,
+    behavior: ScrollBehavior = "smooth"
+  ) => {
     const slider = sliderRef.current;
     const card = cardsRef.current[loopIndex];
     if (!slider || !card) return;
 
-    const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
+    const target =
+      card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
     scrollSliderTo(slider, target, behavior);
   };
 
@@ -81,7 +86,8 @@ export default function FormationPage() {
         return;
       }
 
-      const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
+      const target =
+        card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
       scrollSliderTo(slider, target, "auto");
       updateCycleWidth();
     });
@@ -183,7 +189,10 @@ export default function FormationPage() {
     });
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, loopIndex: number) => {
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+    loopIndex: number
+  ) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       activateCard(loopIndex);
@@ -206,7 +215,8 @@ export default function FormationPage() {
       <div className="flex flex-col items-center gap-4 text-center text-white">
         <h1 className="text-4xl font-semibold">Carrousel de tests</h1>
         <p className="text-white/70">
-          Clique sur une carte pour la placer au centre. Utilise la molette verticale pour défiler.
+          Clique sur une carte pour la placer au centre. Utilise la molette
+          verticale pour défiler.
         </p>
       </div>
 
@@ -244,6 +254,7 @@ export default function FormationPage() {
                   subtitle={session.subtitle}
                   image={session.image}
                   isActive={isActive}
+                  formatter={session.formatter}
                 />
               </div>
             );
@@ -252,10 +263,19 @@ export default function FormationPage() {
       </div>
 
       <div className="text-center text-white">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/40">Carte active</p>
-        <p className="text-2xl font-semibold">{sessions[currentIndex]?.title}</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-white/40">
+          Carte active
+        </p>
+        <p className="text-2xl font-semibold">
+          {sessions[currentIndex]?.title}
+        </p>
         <p className="text-white/70">{sessions[currentIndex]?.subtitle}</p>
       </div>
+      <Avatar
+        name={sessions[currentIndex]?.formatter.name}
+        role={sessions[currentIndex]?.formatter.role}
+        avatar={sessions[currentIndex]?.formatter.image}
+      />
 
       <style jsx>{`
         .no-scrollbar {
