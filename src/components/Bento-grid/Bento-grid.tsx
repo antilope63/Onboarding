@@ -127,68 +127,60 @@ export default function Bento_Doug() {
     {
       Icon: BackpackIcon,
       name: "Boîte à Outils",
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
-      href: "/",
-      cta: "Learn more",
+      description: "", // pas de texte
+      href: "/", // garde si tu veux, mais il ne s’affichera pas
+      cta: "Learn more", // ignoré car hideCta=true
+      hideCta: true, // <<— clé : masque CTA et donc aucune animation de CTA
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
       descriptionColor: descriptioncolor,
       background: (
         <div className="relative h-full w-full">
-          {/* gradient de base */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]" />
-
-          {/* grille de logos interactive */}
-          <div className="absolute inset-0 z-0 grid grid-cols-2 place-items-center h-1/2">
+          <div
+            className={cn(
+              "absolute inset-0 z-0 grid grid-cols-2 place-items-center h-2/3"
+            )}
+          >
             {[
               {
                 src: "/Github_b.svg",
                 alt: "GitHub",
-                glow: "rgba(139,92,246,.45)",
               },
               {
                 src: "/Unity_B.svg",
                 alt: "Unity",
-                glow: "rgba(99,102,241,.45)",
               },
+              { src: "/jira.svg", alt: "Jira" },
               {
-                src: "/Notion_B.svg",
-                alt: "Notion",
-                glow: "rgba(236,72,153,.45)",
-              },
-              {
-                src: "/Figma_b.svg",
-                alt: "Figma",
-                glow: "rgba(34,197,94,.45)",
+                src: "/unreal.png",
+                alt: "Unreal",
               },
             ].map((l) => (
               <div
                 key={l.alt}
                 className={cn(
+                  // état par défaut : grisé + translucide
                   "transition-all duration-300 cursor-pointer",
-                  "opacity-80 blur-[0.5px]",
-                  // dim all on group hover, highlight hovered tile
-                  "group-hover/logos:opacity-60 hover:opacity-100 hover:blur-0",
+                  "opacity-50 grayscale",
+                  // quand la card est survolée : tout reste dim sauf l’élément hover
+                  "group-hover/logos:opacity-50 group-hover/logos:grayscale",
+                  // quand CE logo est survolé : revient en normal
+                  "hover:opacity-100 hover:grayscale-0",
                   // micro-interactions
-                  "hover:-translate-y-1 hover:scale-105 hover:brightness-125"
+                  "hover:-translate-y-1 hover:scale-105"
                 )}
-                style={{
-                  filter: "drop-shadow(0 0 0 rgba(0,0,0,0))",
-                }}
-                onMouseEnter={(e) => {
-                  // ajoute un glow coloré via style inline pour chaque logo
-                  (
-                    e.currentTarget as HTMLDivElement
-                  ).style.filter = `drop-shadow(0 6px 20px ${l.glow})`;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.filter =
-                    "drop-shadow(0 0 0 rgba(0,0,0,0))";
-                }}
+                style={{ filter: "none" }}
               >
-                <Image src={l.src} alt={l.alt} width={64} height={64} />
+                <Image
+                  src={l.src}
+                  alt={l.alt}
+                  width={64}
+                  height={64}
+                  draggable={false}
+                  priority={false}
+                />
               </div>
             ))}
           </div>
@@ -197,6 +189,7 @@ export default function Bento_Doug() {
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
     },
+
     {
       Icon: RocketIcon,
       name: "Mes formations",

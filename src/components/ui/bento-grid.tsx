@@ -1,4 +1,3 @@
-// components/ui/bento-grid.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,9 @@ interface BentoCardProps extends ComponentPropsWithoutRef<"div"> {
   description?: string;
   href?: string;
   cta?: string;
+
+  // Masquer totalement le CTA (mobile + desktop)
+  hideCta?: boolean;
 
   // Layout spécial "hero" centré
   layout?: "default" | "center";
@@ -60,6 +62,7 @@ const BentoCard = ({
   description,
   href = "/",
   cta = "Learn more",
+  hideCta = false,
   layout = "default",
   children,
   background,
@@ -106,7 +109,26 @@ const BentoCard = ({
           </div>
 
           {/* CTA mobile (cliquable) */}
-          <div className="flex w-full lg:hidden">
+          {!hideCta && (
+            <div className="flex w-full lg:hidden">
+              <Button
+                variant="link"
+                asChild
+                size="sm"
+                className={cn("pointer-events-auto p-0", ctaColor)}
+              >
+                <a href={href}>
+                  {cta}
+                  <ArrowRightIcon className="ms-2 h-4 w-4 rtl:rotate-180" />
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* CTA desktop (cliquable) */}
+        {!hideCta && (
+          <div className="pointer-events-none absolute bottom-0 hidden w-full translate-y-10 transform-gpu items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:flex z-10">
             <Button
               variant="link"
               asChild
@@ -119,22 +141,7 @@ const BentoCard = ({
               </a>
             </Button>
           </div>
-        </div>
-
-        {/* CTA desktop (cliquable) */}
-        <div className="pointer-events-none absolute bottom-0 hidden w-full translate-y-10 transform-gpu items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:flex z-10">
-          <Button
-            variant="link"
-            asChild
-            size="sm"
-            className={cn("pointer-events-auto p-0", ctaColor)}
-          >
-            <a href={href}>
-              {cta}
-              <ArrowRightIcon className="ms-2 h-4 w-4 rtl:rotate-180" />
-            </a>
-          </Button>
-        </div>
+        )}
       </>
     )}
 
