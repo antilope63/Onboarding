@@ -1,10 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, Clock, X, Send } from "lucide-react";
 
 export default function AccessDashboard() {
   const [activeTab, setActiveTab] = useState<"mesAcces" | "mesDemandes">("mesAcces");
+
+  // Gestion du switch adaptatif
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+
+  const accesRef = useRef<HTMLButtonElement>(null);
+  const demandesRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const target = activeTab === "mesAcces" ? accesRef.current : demandesRef.current;
+      if (target) {
+        setIndicatorStyle({
+          left: target.offsetLeft,
+          width: target.offsetWidth,
+        });
+      }
+    };
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeTab]);
 
   return (
     <main className="min-h-screen bg-[#04061D] text-white font-display p-8">
@@ -14,38 +38,37 @@ export default function AccessDashboard() {
           <p className="text-gray-300">Contrôlez vos accès et suivez vos demandes facilement</p>
         </div>
 
-        {/* Switch animé */}
-<div className="flex justify-center mb-8">
-  <div className="relative flex bg-[#1D1E3B] rounded-lg p-1">
-    {/* Fond animé */}
-    <div
-      className={`absolute top-1 bottom-1 w-1/2 bg-[#7D5AE0] rounded-md transition-all duration-300 ease-in-out ${
-        activeTab === "mesAcces" ? "left-1" : "left-1/2"
-      }`}
-    />
-
-    {/* Bouton Mes Accès */}
-    <button
-      onClick={() => setActiveTab("mesAcces")}
-      className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ease-in-out ${
-        activeTab === "mesAcces" ? "text-white" : "text-gray-300 hover:text-white"
-      }`}
-    >
-      Mes Accès
-    </button>
-
-    {/* Bouton Mes demandes */}
-    <button
-      onClick={() => setActiveTab("mesDemandes")}
-      className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ease-in-out ${
-        activeTab === "mesDemandes" ? "text-white" : "text-gray-300 hover:text-white"
-      }`}
-    >
-      Mes demandes d'accès
-    </button>
-  </div>
-</div>
-
+        {/* Switch */}
+        <div className="flex justify-center mb-8">
+          <div className="relative flex bg-[#1D1E3B] rounded-lg p-1">
+            {/* Fond animé */}
+            <div
+              className="absolute top-1 bottom-1 bg-[#7D5AE0] rounded-md transition-all duration-500 ease-in-out"
+              style={{
+                left: indicatorStyle.left,
+                width: indicatorStyle.width,
+              }}
+            />
+            <button
+              ref={accesRef}
+              onClick={() => setActiveTab("mesAcces")}
+              className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-500 ${
+                activeTab === "mesAcces" ? "text-white" : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Mes Accès
+            </button>
+            <button
+              ref={demandesRef}
+              onClick={() => setActiveTab("mesDemandes")}
+              className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                activeTab === "mesDemandes" ? "text-white" : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Mes demandes d'accès
+            </button>
+          </div>
+        </div>
 
         {/* Mes Accès */}
         {activeTab === "mesAcces" && (
