@@ -12,7 +12,7 @@ export type Suivi = {
 export const prochainRdv = {
   date: "Demain, 10:00",
   titre: "Entretien avec le Manager",
-  type: "1:1",
+  type: "",
   statut: "Obligatoire",
   tempsRestant: "23h 15m",
   progression: 8, // en %
@@ -35,7 +35,7 @@ export const suivis: Suivi[] = [
     type: "RH",
     date: "La semaine prochaine, 14:00",
     statut: "Obligatoire",
-    couleur: "violet",
+    couleur: "vert",
   },
   {
     id: "3",
