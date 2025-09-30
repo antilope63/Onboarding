@@ -4,10 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import { Check, Clock, X, Send } from "lucide-react";
 
 export default function AccessDashboard() {
-  const [activeTab, setActiveTab] = useState<"mesAcces" | "mesDemandes">("mesAcces");
+  const [activeTab, setActiveTab] = useState<"mesAcces" | "mesDemandes">(
+    "mesAcces"
+  );
 
   // Gestion du switch adaptatif
-  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({
+  const [indicatorStyle, setIndicatorStyle] = useState<{
+    left: number;
+    width: number;
+  }>({
     left: 0,
     width: 0,
   });
@@ -17,7 +22,8 @@ export default function AccessDashboard() {
 
   useEffect(() => {
     const updateIndicator = () => {
-      const target = activeTab === "mesAcces" ? accesRef.current : demandesRef.current;
+      const target =
+        activeTab === "mesAcces" ? accesRef.current : demandesRef.current;
       if (target) {
         setIndicatorStyle({
           left: target.offsetLeft,
@@ -35,7 +41,9 @@ export default function AccessDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">Accès & Droits</h1>
-          <p className="text-gray-300">Contrôlez vos accès et suivez vos demandes facilement</p>
+          <p className="text-gray-300">
+            Contrôlez vos accès et suivez vos demandes facilement
+          </p>
         </div>
 
         {/* Switch */}
@@ -53,7 +61,9 @@ export default function AccessDashboard() {
               ref={accesRef}
               onClick={() => setActiveTab("mesAcces")}
               className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-500 ${
-                activeTab === "mesAcces" ? "text-white" : "text-gray-300 hover:text-white"
+                activeTab === "mesAcces"
+                  ? "text-white"
+                  : "text-gray-300 hover:text-white cursor-pointer"
               }`}
             >
               Mes Accès
@@ -62,7 +72,9 @@ export default function AccessDashboard() {
               ref={demandesRef}
               onClick={() => setActiveTab("mesDemandes")}
               className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
-                activeTab === "mesDemandes" ? "text-white" : "text-gray-300 hover:text-white"
+                activeTab === "mesDemandes"
+                  ? "text-white"
+                  : "text-gray-300 hover:text-white cursor-pointer"
               }`}
             >
               Mes demandes d'accès
@@ -92,9 +104,15 @@ export default function AccessDashboard() {
               <table className="min-w-full text-left">
                 <thead className="border-b border-[#22254C]">
                   <tr>
-                    <th className="px-6 py-3 text-sm font-medium text-gray-400">Outil</th>
-                    <th className="px-6 py-3 text-sm font-medium text-gray-400">Type de droit</th>
-                    <th className="px-6 py-3 text-sm font-medium text-gray-400">Statut</th>
+                    <th className="px-6 py-3 text-sm font-medium text-gray-400">
+                      Outil
+                    </th>
+                    <th className="px-6 py-3 text-sm font-medium text-gray-400">
+                      Type de droit
+                    </th>
+                    <th className="px-6 py-3 text-sm font-medium text-gray-400">
+                      Statut
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22254C]">
@@ -135,7 +153,9 @@ export default function AccessDashboard() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4">Outil de communication interne</td>
+                    <td className="px-6 py-4">
+                      Outil de communication interne
+                    </td>
                     <td className="px-6 py-4">Accès complet</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold dark:bg-green-900/50 dark:text-green-300">
@@ -153,14 +173,20 @@ export default function AccessDashboard() {
         {activeTab === "mesDemandes" && (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 bg-[#1D1E3B] p-6 rounded-xl border border-[#22254C] shadow-lg overflow-x-auto">
-              <h3 className="text-xl font-semibold mb-6">Historique des demandes</h3>
+              <h3 className="text-xl font-semibold mb-6">
+                Historique des demandes
+              </h3>
               <table className="min-w-full text-left">
                 <thead className="border-b border-[#22254C]">
                   <tr>
-                    <th className="px-6 py-3 text-sm text-gray-400">Outil/Plateforme</th>
+                    <th className="px-6 py-3 text-sm text-gray-400">
+                      Outil/Plateforme
+                    </th>
                     <th className="px-6 py-3 text-sm text-gray-400">Type</th>
                     <th className="px-6 py-3 text-sm text-gray-400">Statut</th>
-                    <th className="px-6 py-3 text-sm text-gray-400">Demandé le</th>
+                    <th className="px-6 py-3 text-sm text-gray-400">
+                      Demandé le
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22254C]">
@@ -200,10 +226,14 @@ export default function AccessDashboard() {
 
             <div className="lg:col-span-2 bg-[#1D1E3B] p-6 rounded-xl border border-[#22254C] shadow-lg relative overflow-hidden">
               <div className="absolute top-0 left-0 h-full w-1.5 bg-[#7D5AE0] glow-border"></div>
-              <h3 className="text-xl font-semibold mb-6">Nouvelle demande d'accès</h3>
+              <h3 className="text-xl font-semibold mb-6">
+                Nouvelle demande d'accès
+              </h3>
               <form className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Outil/Plateforme</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Outil/Plateforme
+                  </label>
                   <select className="form-select w-full rounded-lg bg-[#22254C]/50 border border-[#22254C] p-2 text-white">
                     <option>Game Engine X</option>
                     <option>Analytics Dashboard</option>
@@ -211,7 +241,9 @@ export default function AccessDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Type d'accès</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Type d'accès
+                  </label>
                   <select className="form-select w-full rounded-lg bg-[#22254C]/50 border border-[#22254C] p-2 text-white">
                     <option>Lecture</option>
                     <option>Écriture</option>
@@ -219,8 +251,13 @@ export default function AccessDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Justification</label>
-                  <textarea className="w-full rounded-lg bg-[#22254C]/50 border border-[#22254C] p-2 text-white" rows={4}></textarea>
+                  <label className="block text-sm font-medium mb-2">
+                    Justification
+                  </label>
+                  <textarea
+                    className="w-full rounded-lg bg-[#22254C]/50 border border-[#22254C] p-2 text-white"
+                    rows={4}
+                  ></textarea>
                 </div>
                 <div className="flex justify-end">
                   <button className="inline-flex items-center gap-2 bg-[#7D5AE0] px-4 py-2 rounded-lg hover:bg-[#663BD6] transition">
