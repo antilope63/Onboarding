@@ -1,7 +1,7 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
-import { getPhaseStats, phases } from "@/app/Tâches/data";
+import { Task, getPhaseStats, phases } from "@/app/Tâches/data";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { cn } from "@/lib/utils";
@@ -20,25 +20,92 @@ import Image from "next/image";
 export default function Bento_Doug() {
   const { activeIndex } = getPhaseStats(phases);
   const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
+  const activePhase = activeIndex !== null ? phases[activeIndex] : null;
 
   const Iconcolor = "text-white/90";
   const namecolor = "text-white/90";
   const descriptioncolor = "text-white/70";
   const ctacolor = "text-white/70";
 
+  const STATUS_LABEL: Record<Task["status"], string> = {
+    todo: "À faire",
+    "in-progress": "En cours",
+    done: "Fait",
+    verified: "Vérifié",
+  };
+  const STATUS_STYLE: Record<Task["status"], string> = {
+    todo: "bg-white/5 text-white/70 border-white/15",
+    "in-progress": "bg-blue-500/15 text-blue-200 border-blue-400/30",
+    done: "bg-emerald-500/15 text-emerald-200 border-emerald-400/30",
+    verified: "bg-violet-500/15 text-violet-200 border-violet-400/30",
+  };
+
   const features = [
     {
       Icon: ListBulletIcon,
       name: "Vos tâches",
-      description: `vous etes a la phase n°${phaseNumber}`,
+      description: activePhase
+        ? `Vous êtes à la ${activePhase.name} (n°${phaseNumber})`
+        : "Toutes les phases terminées 🎉",
       href: "/",
-      cta: "Go au tâches",
+      cta: "Go aux tâches",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
       descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/20 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
+      background: (
+        <div className="absolute inset-0 p-6">
+          {activePhase ? (
+            <div className="flex h-full w-full flex-col">
+              <div className="text-xs text-white/60 mb-2">
+                {activePhase.name}
+              </div>
+              <ul
+                role="list"
+                className="mt-2 space-y-4 overflow-auto pr-1"
+                style={{ maxHeight: "calc(100% - 2rem)" }}
+              >
+                {activePhase.tasks.map((t) => (
+                  <li
+                    key={t.name}
+                    className={cn(
+                      "flex items-start justify-between gap-3 rounded-lg border px-3 mx-auto mt-4 py-2 items-center",
+                      "bg-white/[0.04] border-white/10",
+                      // ✨ animation hover
+                      "transition-all duration-300 cursor-pointer",
+                      "opacity-80 hover:opacity-100",
+                      "hover:-translate-y-1 hover:scale-105",
+                      "w-[300] items-center"
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm text-white/90 truncate">{t.name}</p>
+                      <p className="text-[11px] text-white/60 truncate">
+                        {t.description}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 border text-[10px] px-2 py-0.5 rounded-md leading-5",
+                        STATUS_STYLE[t.status]
+                      )}
+                      title={STATUS_LABEL[t.status]}
+                    >
+                      {STATUS_LABEL[t.status]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="h-full grid place-items-center text-white/80">
+              🎉 Tout est validé !
+            </div>
+          )}
+        </div>
+      ),
     },
     // HERO CENTRE
     {
