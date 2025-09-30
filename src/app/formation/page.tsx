@@ -214,7 +214,9 @@ export default function FormationPage() {
       <NoScroll />
 
       <div className="flex flex-col items-center gap-2 text-center text-white my-12">
-        <h1 className="text-6xl font-semibold">Besoin d'un coup de Boost ? ✊</h1>
+        <h1 className="text-6xl font-semibold">
+          Besoin d&apos;un coup de Boost ? ✊
+        </h1>
         <p className="text-white/70 text-2xl">
           Tes collègues ont hâte de te rencontrer !
         </p>

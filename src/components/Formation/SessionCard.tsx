@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Avatar from "@/components/Formation/Avatar";
+// import Avatar from "@/components/Formation/Avatar";
 
 export type SessionCardProps = {
   title: string;
@@ -17,10 +17,10 @@ export type SessionCardProps = {
 export default function SessionCard({
   title,
   subtitle,
-  description,
+  description: _description,
   image,
   isActive,
-  formatter,
+  formatter: _formatter,
 }: SessionCardProps) {
   return (
     <section
