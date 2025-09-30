@@ -8,7 +8,7 @@ export default function DocumentationPage() {
     <section className="flex flex-row gap-24 w-full min-h-screen relative bg-noir pt-36 px-20">
       <NoScroll />
       <NavBar classname="absolute top-0 left-0" />
-      <div className="flex flex-col gap-32 mt-12 w-[1300px]">
+      <div className="flex flex-col gap-32 mt-12 w-[1400px]">
         <div>
           <h1 className="text-8xl font-bold text-white">Des questions ?</h1>
           <p className="text-white text-4xl">On a les réponses !</p>
