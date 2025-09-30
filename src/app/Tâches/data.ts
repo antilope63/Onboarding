@@ -12,7 +12,7 @@ export interface Phase {
 
 export const phases: Phase[] = [
   {
-    name: "Phase 1: Setup",
+    name: "Setup",
     tasks: [
       {
         name: "Init project",
