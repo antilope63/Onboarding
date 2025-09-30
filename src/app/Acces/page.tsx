@@ -176,7 +176,7 @@ export default function AccessDashboard() {
                   : "text-gray-300 hover:text-white cursor-pointer"
               }`}
             >
-              Mes demandes d'accès
+              Mes demandes d&apos;accès
             </button>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function AccessDashboard() {
             <div className="lg:col-span-2 bg-[#1D1E3B] p-6 rounded-xl border border-[#22254C] shadow-lg relative overflow-hidden">
               <div className="absolute top-0 left-0 h-full w-1.5 bg-[#7D5AE0] glow-border"></div>
               <h3 className="text-xl font-semibold mb-6">
-                Nouvelle demande d'accès
+                Nouvelle demande d&apos;accès
               </h3>
               <form className="space-y-6" onSubmit={handleSubmitRequest}>
                 <div>
@@ -350,7 +350,7 @@ export default function AccessDashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Type d'accès
+                    Type d&apos;accès
                   </label>
                   <select
                     className="form-select w-full rounded-lg bg-[#22254C]/50 border border-[#22254C] p-2 text-white"
