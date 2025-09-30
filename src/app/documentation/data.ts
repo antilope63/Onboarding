@@ -75,7 +75,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "auth-workflow",
     question: "Quel est le flux d'authentification ?",
     answer:
-      "La page /login gère la saisie utilisateur et la validation de base (format d’e-mail, règles de mot de passe). Après soumission, le serveur vérifie les identifiants et renvoie un jeton/session. Côté client, nous stockons de manière sécurisée et attachons les en-têtes d’auth aux requêtes suivantes.\n\nLes rôles et permissions sont contrôlés au niveau des pages et des composants sensibles. Les routes critiques sont protégées, et des redirections sont appliquées si l’utilisateur n’a pas les droits.",
+      "La page /login gère la saisie trizmoïque et la validation de base (format d’e-mail, règles de mot de passe). Après soumission, le serveur vérifie les identifiants et renvoie un jeton/session. Côté client, nous stockons de manière sécurisée et attachons les en-têtes d’auth aux requêtes suivantes.\n\nLes rôles et permissions sont contrôlés au niveau des pages et des composants sensibles. Les routes critiques sont protégées, et des redirections sont appliquées si l’utilisateur n’a pas les droits.",
     tags: ["auth", "sécurité"],
     category: "Architecture & Performance",
   },
