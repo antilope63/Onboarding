@@ -14,31 +14,38 @@ export default function AccessDashboard() {
           <p className="text-gray-300">Contrôlez vos accès et suivez vos demandes facilement</p>
         </div>
 
-        {/* Switch */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2 rounded-xl bg-[#22254C]/50 p-1.5 w-fit shadow-md">
-            <button
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                activeTab === "mesAcces"
-                  ? "bg-[#7D5AE0] text-white shadow-sm"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("mesAcces")}
-            >
-              Mes Accès
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                activeTab === "mesDemandes"
-                  ? "bg-[#7D5AE0] text-white shadow-sm"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("mesDemandes")}
-            >
-              Mes demandes d'accès
-            </button>
-          </div>
-        </div>
+        {/* Switch animé */}
+<div className="flex justify-center mb-8">
+  <div className="relative flex bg-[#1D1E3B] rounded-lg p-1">
+    {/* Fond animé */}
+    <div
+      className={`absolute top-1 bottom-1 w-1/2 bg-[#7D5AE0] rounded-md transition-all duration-300 ease-in-out ${
+        activeTab === "mesAcces" ? "left-1" : "left-1/2"
+      }`}
+    />
+
+    {/* Bouton Mes Accès */}
+    <button
+      onClick={() => setActiveTab("mesAcces")}
+      className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ease-in-out ${
+        activeTab === "mesAcces" ? "text-white" : "text-gray-300 hover:text-white"
+      }`}
+    >
+      Mes Accès
+    </button>
+
+    {/* Bouton Mes demandes */}
+    <button
+      onClick={() => setActiveTab("mesDemandes")}
+      className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all duration-300 ease-in-out ${
+        activeTab === "mesDemandes" ? "text-white" : "text-gray-300 hover:text-white"
+      }`}
+    >
+      Mes demandes d'accès
+    </button>
+  </div>
+</div>
+
 
         {/* Mes Accès */}
         {activeTab === "mesAcces" && (
