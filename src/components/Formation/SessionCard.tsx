@@ -4,6 +4,7 @@ import Avatar from "@/components/Formation/Avatar";
 export type SessionCardProps = {
   title: string;
   subtitle: string;
+  description: string;
   image: string;
   isActive: boolean;
   formatter: {
@@ -16,15 +17,14 @@ export type SessionCardProps = {
 export default function SessionCard({
   title,
   subtitle,
+  description,
   image,
   isActive,
   formatter,
 }: SessionCardProps) {
   return (
     <section
-      className={`relative flex h-[250px] w-[420px] p-2 flex-col justify-end overflow-hidden rounded-3xl border transition-[transform,box-shadow] duration-300 ${
-        isActive ? "border-white/70" : "border-white/10 cursor-pointer"
-      }`}
+      className="relative flex h-[250px] w-[420px] p-2 flex-col justify-end overflow-hidden rounded-3xl transition-[transform,box-shadow] duration-300 cursor-pointer"
       aria-label={title}
     >
       <Image
@@ -41,9 +41,9 @@ export default function SessionCard({
         }`}
       />
 
-      <div className="relative z-10 flex flex-col p-2 bg-white rounded-2xl">
-        <h3 className="text-lg font-semibold text-black">{title}</h3>
-        <p className="text-xs text-black/70">{subtitle}</p>
+      <div className="relative z-10 flex flex-col p-2 px-4 bg-white rounded-2xl">
+        <h3 className="text-xl font-semibold text-black">{title}</h3>
+        <p className="text-sm text-black/70">{subtitle}</p>
       </div>
     </section>
   );

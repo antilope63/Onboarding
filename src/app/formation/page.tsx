@@ -13,6 +13,7 @@ import {
   type WheelEventHandler,
 } from "react";
 import Avatar from "@/components/Formation/Avatar";
+import { Button } from "@/components/ui/button";
 
 const LOOP_MULTIPLIER = 7;
 const BUFFER_CYCLES = 2;
@@ -212,18 +213,17 @@ export default function FormationPage() {
       <NavBar classname="absolute top-0 left-0" />
       <NoScroll />
 
-      <div className="flex flex-col items-center gap-4 text-center text-white">
-        <h1 className="text-4xl font-semibold">Carrousel de tests</h1>
-        <p className="text-white/70">
-          Clique sur une carte pour la placer au centre. Utilise la molette
-          verticale pour défiler.
+      <div className="flex flex-col items-center gap-2 text-center text-white my-12">
+        <h1 className="text-6xl font-semibold">Besoin d'un coup de Boost ? ✊</h1>
+        <p className="text-white/70 text-2xl">
+          Tes collègues ont hâte de te rencontrer !
         </p>
       </div>
 
       <div className="w-full">
         <div
           ref={sliderRef}
-          className="no-scrollbar flex gap-6 overflow-x-auto overflow-y-hidden px-12 pb-6 pt-2 text-white scroll-smooth snap-x snap-mandatory"
+          className="no-scrollbar flex gap-12 overflow-x-auto overflow-y-hidden text-white scroll-smooth snap-x snap-mandatory"
           onWheel={handleWheel}
         >
           {Array.from({ length: totalCards }, (_, idx) => {
@@ -252,6 +252,7 @@ export default function FormationPage() {
                 <SessionCard
                   title={session.title}
                   subtitle={session.subtitle}
+                  description={session.description}
                   image={session.image}
                   isActive={isActive}
                   formatter={session.formatter}
@@ -262,20 +263,17 @@ export default function FormationPage() {
         </div>
       </div>
 
-      <div className="text-center text-white">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/40">
-          Carte active
-        </p>
-        <p className="text-2xl font-semibold">
-          {sessions[currentIndex]?.title}
-        </p>
-        <p className="text-white/70">{sessions[currentIndex]?.subtitle}</p>
+      <div className="text-center text-white flex flex-col items-center gap-4 max-w-[600px]">
+        <Button className="rounded-full bg-violet_fonce_1 hover:bg-violet text-md p-6">
+          Réserver une session 🤝
+        </Button>
+        <p className="text-white/70">{sessions[currentIndex]?.description}</p>
+        <Avatar
+          name={sessions[currentIndex]?.formatter.name}
+          role={sessions[currentIndex]?.formatter.role}
+          avatar={sessions[currentIndex]?.formatter.image}
+        />
       </div>
-      <Avatar
-        name={sessions[currentIndex]?.formatter.name}
-        role={sessions[currentIndex]?.formatter.role}
-        avatar={sessions[currentIndex]?.formatter.image}
-      />
 
       <style jsx>{`
         .no-scrollbar {
