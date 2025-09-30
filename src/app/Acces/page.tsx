@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Check, Clock, X, Send, Copy } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import NavBar from "@/components/NavBar";
 
 export default function AccessDashboard() {
   const [activeTab, setActiveTab] = useState<"mesAcces" | "mesDemandes">(
@@ -140,10 +141,13 @@ export default function AccessDashboard() {
 
   return (
     <main className="min-h-screen bg-[#04061D] text-white font-display p-8">
+      <NavBar classname="absolute top-0 left-0" />
       <Toaster position="bottom-right" />
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto mt-12">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Accès & Droits</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            Vos accès et vos demandes d&apos;accès
+          </h1>
           <p className="text-gray-300">
             Contrôlez vos accès et suivez vos demandes facilement
           </p>
