@@ -138,7 +138,7 @@ export default function Bento_Doug() {
       href: "/",
       cta: "",
       Icon: () => null,
-      layout: "center",
+      layout: "center" as const,
       className:
         "rounded-[32px] lg:col-span-6 lg:row-span-2 border border-white/10 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
       children: (
