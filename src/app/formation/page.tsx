@@ -45,13 +45,29 @@ export default function FormationPage() {
     cycleWidthRef.current = nextCycleStart.offsetLeft - first.offsetLeft;
   }, [baseLength]);
 
+  const scrollSliderTo = (
+    slider: HTMLDivElement,
+    left: number,
+    behavior: ScrollBehavior
+  ) => {
+    if (behavior === "auto") {
+      const previous = slider.style.scrollBehavior;
+      slider.style.scrollBehavior = "auto";
+      slider.scrollTo({ left });
+      slider.style.scrollBehavior = previous;
+      return;
+    }
+
+    slider.scrollTo({ left, behavior });
+  };
+
   const centerCard = (loopIndex: number, behavior: ScrollBehavior = "smooth") => {
     const slider = sliderRef.current;
     const card = cardsRef.current[loopIndex];
     if (!slider || !card) return;
 
     const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
-    slider.scrollTo({ left: target, behavior });
+    scrollSliderTo(slider, target, behavior);
   };
 
   useEffect(() => {
@@ -66,7 +82,7 @@ export default function FormationPage() {
       }
 
       const target = card.offsetLeft - slider.clientWidth / 2 + card.clientWidth / 2;
-      slider.scrollTo({ left: target, behavior: "auto" });
+      scrollSliderTo(slider, target, "auto");
       updateCycleWidth();
     });
 
@@ -110,7 +126,7 @@ export default function FormationPage() {
     if (cycleIndex < lowerBound || cycleIndex >= upperBound) {
       isAdjustingRef.current = true;
       const target = offsetWithinCycle + middleCycle * width;
-      slider.scrollTo({ left: target, behavior: "auto" });
+      scrollSliderTo(slider, target, "auto");
       requestAnimationFrame(() => {
         isAdjustingRef.current = false;
       });
@@ -133,9 +149,37 @@ export default function FormationPage() {
     if (baseLength === 0) return;
 
     const baseIndex = ((loopIndex % baseLength) + baseLength) % baseLength;
+    const slider = sliderRef.current;
+    const canonicalIndex = normalizeLoopIndex(baseIndex);
+
+    let targetIndex = canonicalIndex;
+
+    if (slider) {
+      const candidates = [canonicalIndex, loopIndex].filter(
+        (idx, pos, arr) => arr.indexOf(idx) === pos
+      );
+
+      const viewportCenter = slider.scrollLeft + slider.clientWidth / 2;
+
+      let shortestDistance = Number.POSITIVE_INFINITY;
+
+      candidates.forEach((candidate) => {
+        const card = cardsRef.current[candidate];
+        if (!card) return;
+
+        const cardCenter = card.offsetLeft + card.clientWidth / 2;
+        const distance = Math.abs(cardCenter - viewportCenter);
+
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          targetIndex = candidate;
+        }
+      });
+    }
+
     setCurrentIndex(baseIndex);
     requestAnimationFrame(() => {
-      centerCard(normalizeLoopIndex(baseIndex));
+      centerCard(targetIndex);
     });
   };
 
