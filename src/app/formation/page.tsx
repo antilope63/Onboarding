@@ -42,8 +42,11 @@ export default function FormationPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const { scheduledSessions, scheduleSession } = useFormationSchedule();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const { scheduledSessions, scheduleSession, cancelSession } =
+    useFormationSchedule();
   const scheduledById = useMemo(() => {
     return new Map(scheduledSessions.map((item) => [item.sessionId, item]));
   }, [scheduledSessions]);
@@ -56,7 +59,35 @@ export default function FormationPage() {
   const currentScheduledSession = currentSession
     ? scheduledById.get(currentSession.id)
     : undefined;
+  const currentScheduledDate = useMemo(() => {
+    if (!currentScheduledSession?.date) return null;
+    const parsed = new Date(currentScheduledSession.date);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [currentScheduledSession?.date]);
   const timeSlots = currentSession ? DEFAULT_TIME_SLOTS : [];
+  const upcomingDays = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(today);
+      day.setDate(today.getDate() + index);
+      return day;
+    });
+  }, []);
+  const formatDayLabel = useCallback((day: Date) => {
+    return day.toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+    });
+  }, []);
+  const formatFullDate = useCallback((day: Date) => {
+    return day.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+    });
+  }, []);
 
   if (cardsRef.current.length !== totalCards) {
     cardsRef.current = Array.from({ length: totalCards }, () => null);
@@ -137,14 +168,22 @@ export default function FormationPage() {
   useEffect(() => {
     if (!isDialogOpen) {
       setSelectedSlot(null);
+      setSelectedDate(null);
+      return;
     }
-  }, [isDialogOpen, currentIndex]);
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      setSelectedSlot(currentScheduledSession?.slot ?? null);
-    }
-  }, [isDialogOpen, currentScheduledSession?.slot]);
+    setSelectedSlot(currentScheduledSession?.slot ?? null);
+
+    const fallbackDate = upcomingDays[0] ?? null;
+    const initialDate = currentScheduledDate ?? fallbackDate;
+    setSelectedDate(initialDate ? new Date(initialDate) : null);
+  }, [
+    isDialogOpen,
+    currentIndex,
+    currentScheduledSession?.slot,
+    currentScheduledDate,
+    upcomingDays,
+  ]);
 
   // Pas d'auto-défilement vertical
   const handleWheel: WheelEventHandler<HTMLDivElement> = (event) => {
@@ -234,14 +273,17 @@ export default function FormationPage() {
   const handleOpenDialog = () => {
     if (currentSession?.done) return;
 
-    setSelectedSlot(currentScheduledSession?.slot ?? null);
     setIsDialogOpen(true);
   };
 
   const handleConfirmReservation = () => {
-    if (!selectedSlot || !currentSession) return;
+    if (!selectedSlot || !selectedDate || !currentSession) return;
 
-    scheduleSession(currentSession.id, selectedSlot);
+    scheduleSession(
+      currentSession.id,
+      selectedSlot,
+      selectedDate.toISOString()
+    );
     setIsDialogOpen(false);
   };
 
@@ -329,12 +371,25 @@ export default function FormationPage() {
           className={`rounded-full text-md p-6 ${
             currentSession?.done
               ? "bg-gray-500 cursor-not-allowed opacity-60"
+              : currentScheduledSession
+              ? "bg-red-600 hover:bg-red-700 cursor-pointer"
               : "bg-violet_fonce_1 hover:bg-violet cursor-pointer"
           }`}
-          disabled={currentSession?.done}
-          onClick={handleOpenDialog}
+          disabled={Boolean(currentSession?.done)}
+          onClick={() => {
+            if (currentSession?.done) return;
+            if (currentScheduledSession) {
+              setIsCancelDialogOpen(true);
+            } else {
+              handleOpenDialog();
+            }
+          }}
         >
-          Réserver une session 🤝
+          {currentSession?.done
+            ? "Déjà fait ✅"
+            : currentScheduledSession
+            ? "Annuler la formation"
+            : "Réserver une session 🤝"}
         </Button>
         <p className="text-white/70">{currentSession?.description}</p>
         <Avatar
@@ -365,15 +420,46 @@ export default function FormationPage() {
               </p>
               {currentSession && (
                 <p className="mt-3 text-sm text-white/60">
-                  Avec {currentSession.formatter.name} · {" "}
+                  Avec {currentSession.formatter.name} ·{" "}
                   {currentSession.formatter.role}
                 </p>
               )}
-              {currentScheduledSession?.slot && (
+              {currentScheduledDate && (
                 <p className="mt-2 text-sm text-white/60">
+                  Date programmée : {formatFullDate(currentScheduledDate)}
+                </p>
+              )}
+              {currentScheduledSession?.slot && (
+                <p className="mt-1 text-sm text-white/60">
                   Créneau actuel : {currentScheduledSession.slot}
                 </p>
               )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-sm uppercase tracking-wide text-white/60">
+                Choisis une date
+              </p>
+              <div className="grid gap-3 sm:grid-cols-4">
+                {upcomingDays.map((day) => {
+                  const isSelected =
+                    selectedDate?.toDateString() === day.toDateString();
+                  return (
+                    <button
+                      key={day.toISOString()}
+                      type="button"
+                      onClick={() => setSelectedDate(new Date(day))}
+                      className={`rounded-lg border p-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet_fonce_1 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0D2A] cursor-pointer select-none ${
+                        isSelected
+                          ? "border-violet_fonce_1 bg-violet_fonce_1/20 text-white"
+                          : "border-white/10 bg-white/5 text-white/80 hover:border-violet_fonce_1 hover:bg-violet_fonce_1/10 hover:text-white"
+                      }`}
+                    >
+                      {formatDayLabel(day)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -407,11 +493,46 @@ export default function FormationPage() {
               </Button>
             </DialogClose>
             <Button
-              className="bg-violet_fonce_1 hover:bg-violet"
-              disabled={!selectedSlot}
+              className="bg-violet_fonce_1 hover:bg-violet cursor-pointer"
+              disabled={!selectedSlot || !selectedDate}
               onClick={handleConfirmReservation}
             >
               Valider ce créneau
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation d'annulation */}
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent className="bg-black/70 text-white border-white/10 backdrop-blur-md">
+          <DialogHeader>
+            <DialogTitle>Annuler la programmation ?</DialogTitle>
+            <DialogDescription className="text-white/70">
+              {currentSession
+                ? `Tu es sur le point d'annuler la programmation de "${currentSession.title}".`
+                : "Tu es sur le point d'annuler cette programmation."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="border-white/20 bg-transparent text-white hover:bg-white/10"
+              >
+                Revenir
+              </Button>
+            </DialogClose>
+            <Button
+              className="bg-red-600 hover:bg-red-700 cursor-pointer"
+              onClick={() => {
+                if (currentSession) {
+                  cancelSession(currentSession.id);
+                }
+                setIsCancelDialogOpen(false);
+              }}
+            >
+              Confirmer l'annulation
             </Button>
           </DialogFooter>
         </DialogContent>

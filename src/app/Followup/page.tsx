@@ -17,16 +17,30 @@ export default function FollowupPage() {
         const session = sessions.find((current) => current.id === item.sessionId);
         if (!session) return null;
 
+        const plannedDate = new Date(item.date);
+        if (Number.isNaN(plannedDate.getTime())) return null;
+
+        const dateLabel = plannedDate.toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+        });
+
         return {
-          id: `formation-${session.id}`,
-          titre: session.title,
-          type: session.subtitle,
-          date: item.slot,
-          statut: "Programmé" as const,
-          couleur: "violet" as const,
+          order: plannedDate.getTime(),
+          suivi: {
+            id: `formation-${session.id}`,
+            titre: session.title,
+            type: session.subtitle,
+            date: `${dateLabel} · ${item.slot}`,
+            statut: "Programmé" as const,
+            couleur: "violet" as const,
+          },
         };
       })
-      .filter((value): value is typeof suivis[number] => value !== null);
+      .filter((value): value is { order: number; suivi: typeof suivis[number] } => value !== null)
+      .sort((a, b) => a.order - b.order)
+      .map((entry) => entry.suivi);
   }, [scheduledSessions]);
 
   const allSuivis = [...scheduledSuivis, ...suivis];

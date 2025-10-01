@@ -13,48 +13,89 @@ import {
 export type ScheduledSession = {
   sessionId: string;
   slot: string;
+  date: string;
   updatedAt: number;
 };
 
 type FormationScheduleContextValue = {
   scheduledSessions: ScheduledSession[];
-  scheduleSession: (sessionId: string, slot: string) => void;
+  scheduleSession: (sessionId: string, slot: string, date: string) => void;
   cancelSession: (sessionId: string) => void;
+  clearAll: () => void;
 };
 
-const FormationScheduleContext = createContext<FormationScheduleContextValue | null>(
-  null
-);
+const FormationScheduleContext =
+  createContext<FormationScheduleContextValue | null>(null);
 
 const STORAGE_KEY = "formation-schedule";
+const STORAGE_MODE =
+  process.env.NEXT_PUBLIC_FORMATION_STORAGE === "session" ? "session" : "local";
 
 export function FormationScheduleProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([]);
+  const [scheduledSessions, setScheduledSessions] = useState<
+    ScheduledSession[]
+  >([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const storage =
+        STORAGE_MODE === "session"
+          ? window.sessionStorage
+          : window.localStorage;
+      const raw = storage.getItem(STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return;
       const safeSessions = parsed
-        .filter((item: unknown): item is ScheduledSession => {
-          if (!item || typeof item !== "object") return false;
-          const candidate = item as Partial<ScheduledSession>;
-          return (
-            typeof candidate.sessionId === "string" &&
-            typeof candidate.slot === "string" &&
-            typeof candidate.updatedAt === "number"
-          );
-        })
-        .sort((a, b) => b.updatedAt - a.updatedAt);
+        .map((item: unknown): ScheduledSession | null => {
+          if (!item || typeof item !== "object") return null;
+          const candidate = item as Partial<ScheduledSession> & {
+            date?: unknown;
+          };
+          if (
+            typeof candidate.sessionId !== "string" ||
+            typeof candidate.slot !== "string"
+          ) {
+            return null;
+          }
 
-      setScheduledSessions(safeSessions);
+          const dateValue =
+            typeof candidate.date === "string"
+              ? candidate.date
+              : new Date().toISOString();
+          const parsedDate = new Date(dateValue);
+          if (Number.isNaN(parsedDate.getTime())) {
+            return null;
+          }
+
+          return {
+            sessionId: candidate.sessionId,
+            slot: candidate.slot,
+            date: parsedDate.toISOString(),
+            updatedAt:
+              typeof candidate.updatedAt === "number"
+                ? candidate.updatedAt
+                : parsedDate.getTime(),
+          };
+        })
+        .filter((value): value is ScheduledSession => value !== null)
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+      // Purge automatique des programmations passées (avant aujourd'hui)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcoming = safeSessions.filter(
+        (s) => new Date(s.date).getTime() >= today.getTime()
+      );
+
+      setScheduledSessions(upcoming);
     } catch (error) {
       console.warn("Impossible de charger les sessions programmées", error);
     }
@@ -62,29 +103,34 @@ export function FormationScheduleProvider({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduledSessions));
+    const storage =
+      STORAGE_MODE === "session" ? window.sessionStorage : window.localStorage;
+    storage.setItem(STORAGE_KEY, JSON.stringify(scheduledSessions));
   }, [scheduledSessions]);
 
-  const scheduleSession = useCallback((sessionId: string, slot: string) => {
-    setScheduledSessions((previous) => {
-      const next = previous.slice();
-      const index = next.findIndex((item) => item.sessionId === sessionId);
-      const payload: ScheduledSession = {
-        sessionId,
-        slot,
-        updatedAt: Date.now(),
-      };
-
-      if (index >= 0) {
-        next[index] = payload;
-        return next
-          .slice()
-          .sort((a, b) => b.updatedAt - a.updatedAt);
+  const scheduleSession = useCallback(
+    (sessionId: string, slot: string, date: string) => {
+      const safeDate = new Date(date);
+      if (Number.isNaN(safeDate.getTime())) {
+        return;
       }
 
-      return [payload, ...next];
-    });
-  }, []);
+      setScheduledSessions((previous) => {
+        const next = previous.filter((item) => item.sessionId !== sessionId);
+        const payload: ScheduledSession = {
+          sessionId,
+          slot,
+          date: safeDate.toISOString(),
+          updatedAt: Date.now(),
+        };
+
+        return [...next, payload].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+      });
+    },
+    []
+  );
 
   const cancelSession = useCallback((sessionId: string) => {
     setScheduledSessions((previous) =>
@@ -92,9 +138,13 @@ export function FormationScheduleProvider({
     );
   }, []);
 
+  const clearAll = useCallback(() => {
+    setScheduledSessions([]);
+  }, []);
+
   const value = useMemo(
-    () => ({ scheduledSessions, scheduleSession, cancelSession }),
-    [scheduledSessions, scheduleSession, cancelSession]
+    () => ({ scheduledSessions, scheduleSession, cancelSession, clearAll }),
+    [scheduledSessions, scheduleSession, cancelSession, clearAll]
   );
 
   return (

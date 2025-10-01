@@ -38,7 +38,7 @@ export default function SessionCard({
           <p className="text-white font-semibold">Fait</p>
         </div>
       ) : scheduled ? (
-        <div className="absolute flex items-center justify-center gap-2 top-3 right-3 rounded-full bg-white/20 px-3 py-1 backdrop-blur-sm z-20">
+        <div className="absolute flex items-center justify-center gap-2 top-3 right-3 rounded-full px-3 py-1 z-20 bg-black/80 border border-white/40 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]">
           <Clock className="w-5 h-5 text-white" />
           <p className="text-white font-semibold">Programmé</p>
         </div>

@@ -24,7 +24,7 @@ export const sessions: FormationSession[] = [
       role: "Game Developer",
       image: "/Organigramme/homme5.jpeg",
     },
-    done: true,
+    done: false,
   },
   {
     id: "session-2",
