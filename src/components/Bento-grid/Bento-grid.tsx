@@ -143,7 +143,7 @@ export default function Bento_Doug() {
       className:
         "rounded-[32px] lg:col-span-6 lg:row-span-2 border border-white/10 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
       children: (
-        <div className="text-white text-8xl font-extrabold leading-[0.95] translate-y-[-5rem] ">
+        <div className="dpi-hero text-white font-extrabold leading-[0.95]">
           Pixelpay <br /> Onboarding
         </div>
       ),
@@ -331,9 +331,10 @@ export default function Bento_Doug() {
   return (
     <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
       {/* ORB au-dessus */}
-      <div className="pointer-events-none absolute inset-0 grid place-items-center z-20">
-        <div className="w-[calc(2*var(--r)+40px)] h-[calc(2*var(--r)+40px)] rounded-full bg-black/60 blur-[24px] opacity-30" />
+      <div className="pointer-events-none absolute inset-0 grid place-items-center z-20 dpi-orb">
+        <div className="w-[calc(2*var(--r)+var(--layout-orb-shadow-extra))] h-[calc(2*var(--r)+var(--layout-orb-shadow-extra))] rounded-full bg-black/60 blur-[24px] opacity-30" />
         <CircularProgress
+          className="dpi-progress"
           strokeWidth={18}
           size={350}
           from="#A855F7"
@@ -346,14 +347,15 @@ export default function Bento_Doug() {
       {/* WRAPPER + MASQUE */}
       <div
         className={[
-          "relative h-[100svh] p-8 z-10",
-          "[--r:clamp(140px,22vmin,190px)]",
+          "relative h-[100svh] z-10",
+          "p-[var(--layout-padding)]",
+          "[--r:var(--layout-orb-radius)]",
           "[mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[-webkit-mask-image:radial-gradient(circle_at_center,transparent_var(--r),#000_var(--r))]",
           "[mask-repeat:no-repeat] [mask-position:center] [mask-size:100%_100%]",
         ].join(" ")}
       >
-        <BentoGrid className="grid h-full grid-cols-12 grid-rows-4 gap-6">
+        <BentoGrid className="h-full grid-cols-12 grid-rows-4 gap-[var(--layout-gap)]">
           {features.map((f) => (
             <BentoCard key={f.name} {...f} />
           ))}

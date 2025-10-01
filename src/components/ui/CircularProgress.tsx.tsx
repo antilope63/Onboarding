@@ -1,5 +1,6 @@
 // components/ui/CircularProgress.tsx
 "use client";
+import { cn } from "@/lib/utils";
 import { nullBrand } from "@/lib/font";
 import { useId } from "react";
 // ⚠️ Garde ce chemin identique à ton projet (les accents peuvent poser souci selon la config)
@@ -17,6 +18,8 @@ type Props = {
   to?: string;
   /** couleur du texte */
   labelColor?: string;
+  /** classes utilitaires additionnelles */
+  className?: string;
 };
 
 export function CircularProgress({
@@ -26,6 +29,7 @@ export function CircularProgress({
   from = "#8B5CF6",
   to = "#6D28D9",
   labelColor = "#E5E7EB",
+  className,
 }: Props) {
   const id = useId();
 
@@ -43,7 +47,7 @@ export function CircularProgress({
 
   return (
     <div
-      className="relative inline-grid place-items-center"
+      className={cn("relative inline-grid place-items-center", className)}
       style={{ width: size, height: size }}
     >
       <svg

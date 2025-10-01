@@ -41,6 +41,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --layout-font-scale: 1;
+  --layout-padding: 2rem;
+  --layout-gap: 1.5rem;
+  --layout-hero-font-size: clamp(4rem, 7vw, 6rem);
+  --layout-hero-shift: -5rem;
+  --layout-orb-radius: clamp(140px, 22vmin, 190px);
+  --layout-orb-shadow-extra: 40px;
+  --layout-orb-scale: 1;
+  --layout-progress-scale: 1;
   /* Brand colors available to Tailwind utilities (bg-*, text-*, etc.) */
   --color-noir: #04061D;
   --color-violet_fonce_1: #663BD6;
@@ -105,6 +114,15 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+  --layout-font-scale: 1;
+  --layout-padding: 2rem;
+  --layout-gap: 1.5rem;
+  --layout-hero-font-size: clamp(4rem, 7vw, 6rem);
+  --layout-hero-shift: -5rem;
+  --layout-orb-radius: clamp(140px, 22vmin, 190px);
+  --layout-orb-shadow-extra: 40px;
+  --layout-orb-scale: 1;
+  --layout-progress-scale: 1;
 }
 
 .dark {
@@ -146,7 +164,40 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+@media (min-resolution: 1.25dppx) and (max-resolution: 1.49dppx) {
+  :root {
+    --layout-font-scale: 0.94;
+    --layout-padding: 1.75rem;
+    --layout-gap: 1.35rem;
+    --layout-hero-font-size: clamp(3.35rem, 6vw, 5.5rem);
+    --layout-hero-shift: -4rem;
+    --layout-orb-radius: clamp(120px, 20vmin, 170px);
+    --layout-orb-shadow-extra: 28px;
+    --layout-orb-scale: 0.9;
+    --layout-progress-scale: 0.88;
+    --radius: 0.55rem;
+  }
+}
+
+@media (min-resolution: 1.5dppx) and (max-resolution: 1.99dppx) {
+  :root {
+    --layout-font-scale: 0.88;
+    --layout-padding: 1.5rem;
+    --layout-gap: 1.25rem;
+    --layout-hero-font-size: clamp(3.1rem, 5.5vw, 5rem);
+    --layout-hero-shift: -3.5rem;
+    --layout-orb-radius: clamp(110px, 18vmin, 150px);
+    --layout-orb-shadow-extra: 24px;
+    --layout-orb-scale: 0.82;
+    --layout-progress-scale: 0.8;
+    --radius: 0.5rem;
+  }
+}
+
 @layer base {
+  html {
+    font-size: calc(100% * var(--layout-font-scale));
+  }
   * {
     @apply border-border outline-ring/50;
   }
@@ -162,4 +213,22 @@ path.rd3t-link {
   stroke: #ffffff !important;
   stroke-width: 3px !important;
   fill: none !important;
+}
+
+.dpi-hero {
+  font-size: var(--layout-hero-font-size);
+  transform: translateY(var(--layout-hero-shift));
+  transition: font-size 150ms ease, transform 150ms ease;
+}
+
+.dpi-orb {
+  transform: scale(var(--layout-orb-scale));
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+
+.dpi-progress {
+  transform: scale(var(--layout-progress-scale));
+  transform-origin: center;
+  transition: transform 150ms ease;
 }
