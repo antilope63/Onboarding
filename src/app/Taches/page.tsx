@@ -1,47 +1,115 @@
-"use client";
+"use client"
 
-import { AnimatePresence } from "motion/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react"
+import { AnimatePresence } from "motion/react"
 
-import { KanbanView } from "./components/kanban-view";
-import { PhaseModal } from "./components/phase-modal";
-import { PhaseView } from "./components/phase-view";
-import { ViewOption, ViewToggle } from "./components/view-toggle";
-import type { Phase, TaskStatus } from "./data";
-import { phases } from "./data";
-
-type Overview = {
-  completion: number;
-  totalTasks: number;
-  completedTasks: number;
-  activePhaseName: string;
-};
+import type { Phase, TaskStatus } from "./data"
+import { phases as initialPhases } from "./data"
+import { KanbanView } from "./components/kanban-view"
+import { PhaseModal } from "./components/phase-modal"
+import { PhaseView } from "./components/phase-view"
+import { ViewOption, ViewToggle } from "./components/view-toggle"
 
 type KanbanColumns = Record<
   TaskStatus,
-  { phase: string; name: string; description: string }[]
->;
+  {
+    phase: string
+    phaseIndex: number
+    taskIndex: number
+    name: string
+    description: string
+    locked: boolean
+  }[]
+>
 
 const viewTabs: { id: ViewOption; label: string }[] = [
   { id: "phase", label: "Par phase" },
   { id: "kanban", label: "Kanban" },
-];
+]
+
+const clonePhases = (source: Phase[]): Phase[] =>
+  source.map((phase) => ({
+    ...phase,
+    tasks: phase.tasks.map((task) => ({ ...task })),
+  }))
 
 export default function TasksPage() {
-  const [view, setView] = useState<ViewOption>("phase");
-  const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
+  const [phasesState, setPhasesState] = useState<Phase[]>(() =>
+    clonePhases(initialPhases)
+  )
+  const [view, setView] = useState<ViewOption>("phase")
+  const [selectedPhaseIndex, setSelectedPhaseIndex] = useState<number | null>(
+    null
+  )
+
+  const selectedPhase =
+    selectedPhaseIndex !== null ? phasesState[selectedPhaseIndex] ?? null : null
+
+  const activePhaseIndex = useMemo(() => {
+    const idx = phasesState.findIndex((phase) =>
+      phase.tasks.some((task) => task.status !== "verified")
+    )
+
+    return idx === -1 ? null : idx
+  }, [phasesState])
+
+  const lockedPhaseIndices = useMemo(() => {
+    const locked = new Set<number>()
+    if (activePhaseIndex === null) {
+      return locked
+    }
+
+    for (let index = activePhaseIndex + 1; index < phasesState.length; index++) {
+      locked.add(index)
+    }
+    return locked
+  }, [activePhaseIndex, phasesState.length])
+
+  const overview = useMemo(() => {
+    const totalTasks = phasesState.reduce(
+      (acc, phase) => acc + phase.tasks.length,
+      0
+    )
+    const completedTasks = phasesState.reduce(
+      (acc, phase) =>
+        acc + phase.tasks.filter((task) => task.status === "verified").length,
+      0
+    )
+
+    const completion = totalTasks
+      ? Math.round((completedTasks / totalTasks) * 100)
+      : 0
+
+    const activeName =
+      activePhaseIndex !== null
+        ? phasesState[activePhaseIndex]?.name ?? "Tout est validé 🎉"
+        : "Tout est validé 🎉"
+
+    return {
+      completion,
+      totalTasks,
+      completedTasks,
+      activePhaseName: activeName,
+    }
+  }, [phasesState, activePhaseIndex])
 
   const kanbanColumns = useMemo<KanbanColumns>(() => {
-    return phases.reduce<KanbanColumns>(
-      (acc, phase) => {
-        phase.tasks.forEach((task) => {
+    return phasesState.reduce<KanbanColumns>(
+      (acc, phase, phaseIndex) => {
+        const isLocked = lockedPhaseIndices.has(phaseIndex)
+
+        phase.tasks.forEach((task, taskIndex) => {
           acc[task.status].push({
             phase: phase.name,
+            phaseIndex,
+            taskIndex,
             name: task.name,
             description: task.description,
-          });
-        });
-        return acc;
+            locked: isLocked || task.status === "verified",
+          })
+        })
+
+        return acc
       },
       {
         todo: [],
@@ -49,35 +117,53 @@ export default function TasksPage() {
         done: [],
         verified: [],
       }
-    );
-  }, []);
+    )
+  }, [phasesState, lockedPhaseIndices])
 
-  const overview = useMemo<Overview>(() => {
-    const totalTasks = phases.reduce(
-      (acc, phase) => acc + phase.tasks.length,
-      0
-    );
-    const completedTasks = phases.reduce(
-      (acc, phase) =>
-        acc + phase.tasks.filter((task) => task.status === "verified").length,
-      0
-    );
+  const handlePhaseOpen = useCallback(
+    (phaseIndex: number) => {
+      if (lockedPhaseIndices.has(phaseIndex)) {
+        return
+      }
+      setSelectedPhaseIndex(phaseIndex)
+    },
+    [lockedPhaseIndices]
+  )
 
-    const activePhase = phases.find((phase) =>
-      phase.tasks.some((task) => task.status !== "verified")
-    );
+  const handleModalClose = useCallback(() => {
+    setSelectedPhaseIndex(null)
+  }, [])
 
-    const completion = totalTasks
-      ? Math.round((completedTasks / totalTasks) * 100)
-      : 0;
+  const handleTaskStatusChange = useCallback(
+    (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => {
+      if (nextStatus === "verified" || lockedPhaseIndices.has(phaseIndex)) {
+        return
+      }
 
-    return {
-      completion,
-      totalTasks,
-      completedTasks,
-      activePhaseName: activePhase?.name ?? "Tout est validé 🎉",
-    };
-  }, []);
+      setPhasesState((prev) =>
+        prev.map((phase, index) => {
+          if (index !== phaseIndex) {
+            return phase
+          }
+
+          const tasks = phase.tasks.map((task, currentIndex) => {
+            if (currentIndex !== taskIndex) {
+              return task
+            }
+
+            if (task.status === "verified" || task.status === nextStatus) {
+              return task
+            }
+
+            return { ...task, status: nextStatus }
+          })
+
+          return { ...phase, tasks }
+        })
+      )
+    },
+    [lockedPhaseIndices]
+  )
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#090B1E] py-16 text-white">
@@ -88,12 +174,15 @@ export default function TasksPage() {
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 sm:px-6 lg:px-12">
         <header className="flex flex-col gap-6">
           <div>
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/40">
+              Pixelpay Onboarding
+            </span>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Pilotage des tâches
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-white/70">
-              Choisis une vue pour suivre l&apos;avancement des phases ou
-              navigue par statut avec le Kanban.
+              Choisis une vue pour suivre l&apos;avancement des phases ou navigue par
+              statut avec le Kanban.
             </p>
           </div>
 
@@ -104,20 +193,29 @@ export default function TasksPage() {
           {view === "phase" ? (
             <PhaseView
               key="phase"
-              phases={phases}
+              phases={phasesState}
               overview={overview}
-              onPhaseOpen={setSelectedPhase}
+              onPhaseOpen={handlePhaseOpen}
+              activeIndex={activePhaseIndex}
+              lockedPhaseIndices={lockedPhaseIndices}
             />
           ) : (
-            <KanbanView key="kanban" columns={kanbanColumns} />
+            <KanbanView
+              key="kanban"
+              columns={kanbanColumns}
+              onStatusChange={handleTaskStatusChange}
+            />
           )}
         </AnimatePresence>
       </div>
 
       <PhaseModal
         phase={selectedPhase}
-        onClose={() => setSelectedPhase(null)}
+        phaseIndex={selectedPhaseIndex}
+        onClose={handleModalClose}
+        onStatusChange={handleTaskStatusChange}
+        lockedPhaseIndices={lockedPhaseIndices}
       />
     </div>
-  );
+  )
 }
