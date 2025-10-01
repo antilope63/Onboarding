@@ -1,3 +1,10 @@
-export type { OrgNode } from "@/components/Organigramme/Organigramme";
+export interface OrgNode {
+  id: string;
+  title: string;
+  name: string;
+  image?: string;
+  count?: number;
+  children?: OrgNode[];
+}
 
 
