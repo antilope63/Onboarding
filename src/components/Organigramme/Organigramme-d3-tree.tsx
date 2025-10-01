@@ -58,13 +58,14 @@ export default function OrgD3Tree({ data }: Props) {
   const treeData = useMemo(() => toRaw(data), [data]);
 
   return (
-    <div ref={wrapperRef} className="w-full h-[80vh]">
+    <section ref={wrapperRef} className="w-full h-screen">
       <Tree
         data={treeData}
         orientation="vertical"
         pathFunc="step" // "diagonal" ou "elbow" ou "straight" ou "step"
-        zoomable={false}
-        draggable={false}
+        zoomable
+        draggable
+        scaleExtent={{ min: 0.5, max: 2.5 }}
         translate={translate}
         collapsible={false}
         nodeSize={{ x: 220, y: 140 }}
@@ -131,6 +132,6 @@ export default function OrgD3Tree({ data }: Props) {
           return "branch-default";
         }}
       />
-    </div>
+    </section>
   );
 }
