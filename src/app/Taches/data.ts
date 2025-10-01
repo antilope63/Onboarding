@@ -12,7 +12,7 @@ export interface Phase {
 
 export const phases: Phase[] = [
   {
-    name: "Phase 1: Setup",
+    name: "Setup",
     tasks: [
       {
         name: "Init project",
@@ -32,7 +32,7 @@ export const phases: Phase[] = [
     ],
   },
   {
-    name: "Phase 2: UI",
+    name: "UI",
     tasks: [
       {
         name: "Design mockups",
@@ -52,7 +52,7 @@ export const phases: Phase[] = [
     ],
   },
   {
-    name: "Phase 3: Features",
+    name: "Features",
     tasks: [
       {
         name: "Progress bar",

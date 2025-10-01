@@ -58,6 +58,7 @@ export default function DocumentsPage() {
         <BackButton label="Accueil" href="/" />
       </div>
 
+
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">

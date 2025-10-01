@@ -1,9 +1,10 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
-import { AnimatedBeamBento } from "./animated_beam_bento";
-import { Task, getPhaseStats, phases } from "@/app/Tâches/data";
-import { BentoCard, BentoGrid, type BentoCardProps } from "@/components/ui/bento-grid";
+
+import { Task, getPhaseStats, phases } from "@/app/Taches/data";
+import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ import {
   RocketIcon,
 } from "@radix-ui/react-icons";
 import Image from "next/image";
+import Link from "next/link";
+import { AnimatedBeamBento } from "./animated_beam_bento";
 
 export default function Bento_Doug() {
   const { activeIndex } = getPhaseStats(phases);
@@ -68,11 +71,11 @@ export default function Bento_Doug() {
   const features: BentoCardProps[] = [
     {
       Icon: ListBulletIcon,
-      name: "Vos tâches",
+      name: "Tâches",
       description: activePhase
-        ? `Vous êtes à la ${activePhase.name} (n°${phaseNumber})`
+        ? `Vous êtes à la phase ${activePhase.name} `
         : "Toutes les phases terminées 🎉",
-      href: "/",
+      href: "/Tâches",
       cta: "Go aux tâches",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -132,13 +135,12 @@ export default function Bento_Doug() {
         </div>
       ),
     },
-    // HERO CENTRE
     {
       name: "Hero",
       href: "/",
       cta: "",
       Icon: () => null,
-      layout: "center",
+      layout: "center" as const,
       className:
         "rounded-[32px] lg:col-span-6 lg:row-span-2 border border-white/10 bg-[radial-gradient(ellipse_at_50%_100%,#805CE3_30%,#683DD9_60%,#663AD8_100%)]",
       children: (
@@ -150,9 +152,9 @@ export default function Bento_Doug() {
     {
       Icon: GlobeIcon,
       name: "Organigramme",
-      description: "Supports 100+ languages and counting.",
-      href: "/",
-      cta: "Learn more",
+      description: "Presentation du personel",
+      href: "/organigramme",
+      cta: "Aller voir l'organigramme",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -162,10 +164,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: CalendarIcon,
-      name: "follow up",
-      description: "Use the calendar to filter your files by date.",
+      name: "Follow up",
+      description: "Votre prochain follow-up est le ",
       href: "/",
-      cta: "Learn more",
+      cta: "Aller au follow-up",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -175,11 +177,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: LockClosedIcon,
-      name: "mes acces",
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
+      name: "Mes accès",
+      description: "Gestion de vos accès",
       href: "/",
-      cta: "Learn more",
+      cta: "Gérer mes accès",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -189,11 +190,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: IdCardIcon,
-      name: "mes documents",
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
-      href: "/",
-      cta: "Learn more",
+      name: "Mes documents",
+      description: "Vos documents sont tous réunis ici.",
+      href: "/Documents",
+      cta: "Voir mes documents",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -230,27 +230,23 @@ export default function Bento_Doug() {
     },
     {
       Icon: ReaderIcon,
-      name: "documentation",
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
-      href: "/",
-      cta: "Learn more",
+      name: "Documentation",
+      description: "Si tu à des questions c'est ici",
+      href: "/documentation",
+      cta: "J'ai une question",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
       descriptionColor: descriptioncolor,
       className:
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_0%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
-      background: (
-        <AnimatedBeamBento />
-      ),
+      background: <AnimatedBeamBento />,
     },
     // BOÎTE À OUTILS (logos interactifs)
     {
       Icon: BackpackIcon,
       name: "Boîte à Outils",
       description: "", // pas de texte
-      href: "/", // garde si tu veux, mais il ne s’affichera pas
       cta: "Learn more", // ignoré car hideCta=true
       hideCta: true, // <<— clé : masque CTA et donc aucune animation de CTA
       iconColor: Iconcolor,
@@ -269,28 +265,34 @@ export default function Bento_Doug() {
               {
                 src: "/Github_b.svg",
                 alt: "GitHub",
+                href: "https://github.com/antilope63/Onboarding",
               },
               {
                 src: "/Unity_B.svg",
                 alt: "Unity",
+                href: "https://unity.com",
               },
-              { src: "/jira.svg", alt: "Jira" },
+              {
+                src: "/jira.svg",
+                alt: "Jira",
+                href: "https://www.atlassian.com/software/jira",
+              },
               {
                 src: "/unreal.png",
                 alt: "Unreal",
+                href: "https://www.unrealengine.com",
               },
             ].map((l) => (
-              <div
+              <Link
                 key={l.alt}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={cn(
-                  // état par défaut : grisé + translucide
                   "transition-all duration-300 cursor-pointer",
                   "opacity-50 grayscale",
-                  // quand la card est survolée : tout reste dim sauf l’élément hover
                   "group-hover/logos:opacity-50 group-hover/logos:grayscale",
-                  // quand CE logo est survolé : revient en normal
                   "hover:opacity-100 hover:grayscale-0",
-                  // micro-interactions
                   "hover:-translate-y-1 hover:scale-105"
                 )}
                 style={{ filter: "none" }}
@@ -303,7 +305,7 @@ export default function Bento_Doug() {
                   draggable={false}
                   priority={false}
                 />
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -315,10 +317,9 @@ export default function Bento_Doug() {
     {
       Icon: RocketIcon,
       name: "Mes formations",
-      description:
-        "Get notified when someone shares a file or mentions you in a comment.",
+      description: `Tu as besoin d'aide ? Forme-toi !`,
       href: "/",
-      cta: "Learn more",
+      cta: "J'ai besoin d'aide",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
