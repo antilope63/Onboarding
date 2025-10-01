@@ -20,10 +20,10 @@ export type SessionCardProps = {
 export default function SessionCard({
   title,
   subtitle,
-  description: _description,
+  description,
   image,
   isActive,
-  formatter: _formatter,
+  formatter,
   done,
   scheduled = false,
 }: SessionCardProps) {

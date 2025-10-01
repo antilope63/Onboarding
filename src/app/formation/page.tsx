@@ -510,8 +510,8 @@ export default function FormationPage() {
             <DialogTitle>Annuler la programmation ?</DialogTitle>
             <DialogDescription className="text-white/70">
               {currentSession
-                ? `Tu es sur le point d'annuler la programmation de "${currentSession.title}".`
-                : "Tu es sur le point d'annuler cette programmation."}
+                ? `Tu es sur le point d’annuler la programmation de "${currentSession.title}".`
+                : "Tu es sur le point d’annuler cette programmation."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -532,7 +532,7 @@ export default function FormationPage() {
                 setIsCancelDialogOpen(false);
               }}
             >
-              Confirmer l'annulation
+              Confirmer l’annulation
             </Button>
           </DialogFooter>
         </DialogContent>

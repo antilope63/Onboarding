@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { prochainRdv, suivis } from "./data";
+import { prochainRdv, suivis, type Suivi } from "./data";
 import { CalendarClock, Users, Briefcase } from "lucide-react";
 import NavBar from "@/components/NavBar";
 import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
@@ -14,7 +14,9 @@ export default function FollowupPage() {
   const scheduledSuivis = useMemo(() => {
     return scheduledSessions
       .map((item) => {
-        const session = sessions.find((current) => current.id === item.sessionId);
+        const session = sessions.find(
+          (current) => current.id === item.sessionId
+        );
         if (!session) return null;
 
         const plannedDate = new Date(item.date);
@@ -26,19 +28,19 @@ export default function FollowupPage() {
           month: "long",
         });
 
-        return {
-          order: plannedDate.getTime(),
-          suivi: {
-            id: `formation-${session.id}`,
-            titre: session.title,
-            type: session.subtitle,
-            date: `${dateLabel} · ${item.slot}`,
-            statut: "Programmé" as const,
-            couleur: "violet" as const,
-          },
+        const suivi: Suivi = {
+          id: `formation-${session.id}`,
+          titre: session.title,
+          type: session.subtitle,
+          date: `${dateLabel} · ${item.slot}`,
+          statut: "Programmé",
+          couleur: "violet",
         };
+        return { order: plannedDate.getTime(), suivi };
       })
-      .filter((value): value is { order: number; suivi: typeof suivis[number] } => value !== null)
+      .filter(
+        (value): value is { order: number; suivi: Suivi } => value !== null
+      )
       .sort((a, b) => a.order - b.order)
       .map((entry) => entry.suivi);
   }, [scheduledSessions]);
