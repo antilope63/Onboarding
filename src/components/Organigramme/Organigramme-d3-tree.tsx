@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
@@ -123,7 +124,7 @@ export default function OrgD3Tree({ data }: Props) {
         collapsible={false}
         nodeSize={{ x: 220, y: 140 }}
         separation={{ siblings: 0.7, nonSiblings: 0.9 }}
-        renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
+        renderCustomNodeElement={({ nodeDatum }) => {
           const type = nodeDatum.attributes?.["type"] as string | undefined;
           const role = nodeDatum.attributes?.["Rôle"];
           const img = (nodeDatum.attributes?.["Image"] as string) || "";
@@ -157,10 +158,12 @@ export default function OrgD3Tree({ data }: Props) {
                 <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px] cursor-pointer">
                   {/* Avatar */}
                   {img ? (
-                    <img
+                    <Image
                       src={img}
                       alt={nodeDatum.name}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-400" />
@@ -209,11 +212,14 @@ export default function OrgD3Tree({ data }: Props) {
 
           <div className="flex flex-col items-center gap-4">
             {selectedPerson?.image ? (
-              <img
-                src={selectedPerson.image}
-                alt={selectedPerson.name}
-                className="w-40 h-40 md:w-56 md:h-56 rounded-full object-cover shadow"
-              />
+              <div className="relative w-40 h-40 md:w-56 md:h-56">
+                <Image
+                  src={selectedPerson.image}
+                  alt={selectedPerson.name || "avatar"}
+                  fill
+                  className="rounded-full object-cover shadow"
+                />
+              </div>
             ) : (
               <div className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-gray-500" />
             )}
