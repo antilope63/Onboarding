@@ -258,6 +258,7 @@ export default function FormationPage() {
                   image={session.image}
                   isActive={isActive}
                   formatter={session.formatter}
+                  done={session.done}
                 />
               </div>
             );
@@ -266,7 +267,14 @@ export default function FormationPage() {
       </div>
 
       <div className="text-center text-white flex flex-col items-center gap-4 max-w-[600px]">
-        <Button className="rounded-full bg-violet_fonce_1 hover:bg-violet text-md p-6 cursor-pointer">
+        <Button
+          className={`rounded-full text-md p-6 ${
+            sessions[currentIndex]?.done
+              ? "bg-gray-500 cursor-not-allowed opacity-60"
+              : "bg-violet_fonce_1 hover:bg-violet cursor-pointer"
+          }`}
+          disabled={sessions[currentIndex]?.done}
+        >
           Réserver une session 🤝
         </Button>
         <p className="text-white/70">{sessions[currentIndex]?.description}</p>

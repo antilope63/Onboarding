@@ -1,5 +1,6 @@
 import Image from "next/image";
 // import Avatar from "@/components/Formation/Avatar";
+import { CheckIcon } from "@radix-ui/react-icons";
 
 export type SessionCardProps = {
   title: string;
@@ -12,6 +13,7 @@ export type SessionCardProps = {
     role: string;
     image: string;
   };
+  done: boolean;
 };
 
 export default function SessionCard({
@@ -21,12 +23,19 @@ export default function SessionCard({
   image,
   isActive,
   formatter: _formatter,
+  done,
 }: SessionCardProps) {
   return (
     <section
       className="relative flex h-[250px] w-[420px] p-2 flex-col justify-end overflow-hidden rounded-3xl transition-[transform,box-shadow] duration-300 cursor-pointer"
       aria-label={title}
     >
+      {done && (
+        <div className="absolute flex items-center justify-center top-3 right-3 bg-violet rounded-full px-3 z-20">
+          <CheckIcon className="w-6 h-6 text-white font-semibold" />
+          <p className="text-white font-semibold">Fait</p>
+        </div>
+      )}
       <Image
         src={image}
         alt={title}
