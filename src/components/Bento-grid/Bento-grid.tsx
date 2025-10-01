@@ -1,5 +1,6 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
+
 import { Task, getPhaseStats, phases } from "@/app/Taches/data";
 import {
   BentoCard,
@@ -26,7 +27,6 @@ import { AnimatedBeamBento } from "./animated_beam_bento";
 
 export default function Bento_Doug() {
   const { activeIndex } = getPhaseStats(phases);
-  const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
   const activePhase = activeIndex !== null ? phases[activeIndex] : null;
 
   const Iconcolor = "text-white/90";

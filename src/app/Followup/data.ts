@@ -5,7 +5,7 @@ export type Suivi = {
   titre: string;
   type: string;
   date: string;
-  statut: "Obligatoire" | "Optionnel";
+  statut: "Obligatoire" | "Optionnel" | "Programmé";
   couleur: "vert" | "violet" | "orange" | "gris";
 };
 

@@ -1,5 +1,6 @@
 import Image from "next/image";
-// import Avatar from "@/components/Formation/Avatar";
+import { CheckIcon } from "@radix-ui/react-icons";
+import { Clock } from "lucide-react";
 
 export type SessionCardProps = {
   title: string;
@@ -12,21 +13,36 @@ export type SessionCardProps = {
     role: string;
     image: string;
   };
+  done: boolean;
+  scheduled?: boolean;
 };
 
 export default function SessionCard({
   title,
   subtitle,
-  description: _description,
+  description,
   image,
   isActive,
-  formatter: _formatter,
+  formatter,
+  done,
+  scheduled = false,
 }: SessionCardProps) {
   return (
     <section
       className="relative flex h-[250px] w-[420px] p-2 flex-col justify-end overflow-hidden rounded-3xl transition-[transform,box-shadow] duration-300 cursor-pointer"
       aria-label={title}
     >
+      {done ? (
+        <div className="absolute flex items-center justify-center top-3 right-3 bg-violet rounded-full px-3 z-20">
+          <CheckIcon className="w-6 h-6 text-white font-semibold" />
+          <p className="text-white font-semibold">Fait</p>
+        </div>
+      ) : scheduled ? (
+        <div className="absolute flex items-center justify-center gap-2 top-3 right-3 rounded-full px-3 py-1 z-20 bg-black/80 border border-white/40 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]">
+          <Clock className="w-5 h-5 text-white" />
+          <p className="text-white font-semibold">Programmé</p>
+        </div>
+      ) : null}
       <Image
         src={image}
         alt={title}
