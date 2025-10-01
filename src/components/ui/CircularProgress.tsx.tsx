@@ -3,7 +3,7 @@
 import { nullBrand } from "@/lib/font";
 import { useId } from "react";
 // ⚠️ Garde ce chemin identique à ton projet (les accents peuvent poser souci selon la config)
-import { getPhaseStats, phases } from "@/app/Tâches/data";
+import { getPhaseStats, phases } from "@/app/Taches/data";
 
 type Props = {
   /** taille en px (diamètre) */
