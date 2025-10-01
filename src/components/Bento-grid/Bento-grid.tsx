@@ -1,8 +1,10 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
+
 import { Task, getPhaseStats, phases } from "@/app/Taches/data";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -66,7 +68,7 @@ export default function Bento_Doug() {
     },
   ];
 
-  const features = [
+  const features: BentoCardProps[] = [
     {
       Icon: ListBulletIcon,
       name: "Tâches",
