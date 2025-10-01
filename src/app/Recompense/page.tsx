@@ -36,7 +36,7 @@ export default function AchievementPage() {
               Succès débloqué
             </p>
             <h2 className="text-3xl font-bold mt-1 text-white">Intégration terminée !</h2>
-            <p className="mt-2 text-[#663BD6]">
+            <p className="mt-2">
               Bienvenue dans l'équipe ! Vous êtes prêt à commencer votre aventure chez PixelPlay.
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function AchievementPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-4 bg-[#22254C] p-3 rounded-lg">
               <FileText className="w-6 h-6 text-[#7D5AE0]" />
-              <p className="font-semibold text-white">Documents lus</p>
+              <p className="font-semibold text-white">Documentation</p>
               <CheckCircle className="w-5 h-5 text-[#663BD6] ml-auto" />
             </div>
             <div className="flex items-center gap-4 bg-[#22254C] p-3 rounded-lg">
@@ -91,7 +91,7 @@ export default function AchievementPage() {
             </div>
             <div className="flex items-center gap-4 bg-[#22254C] p-3 rounded-lg">
               <CheckSquare className="w-6 h-6 text-[#7D5AE0]" />
-              <p className="font-semibold text-white">Suivis terminés</p>
+              <p className="font-semibold text-white">Tâches terminées</p>
               <CheckCircle className="w-5 h-5 text-[#663BD6] ml-auto" />
             </div>
           </div>
