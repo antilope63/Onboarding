@@ -3,22 +3,20 @@
 
 import { prochainRdv, suivis } from "./data";
 import { CalendarClock, Users, Briefcase } from "lucide-react";
-import BackButton from "@/components/BackButton"; // Assure-toi du bon chemin
+import NavBar from "@/components/NavBar";
 
 export default function FollowupPage() {
   return (
     <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12">
-      <div className="mx-auto max-w-7xl flex flex-col gap-10">
-        {/* Back Button en haut à gauche */}
-        <BackButton label="Retour" href="/" className="mb-4" />
-
+      <div className="mx-auto max-w-7xl flex flex-col gap-10 pt-30">
+        <NavBar classname="absolute top-0 left-0" />
         {/* Header */}
         <div>
           <h1 className="text-5xl font-bold tracking-tighter text-white">
-            Bienvenue dans votre suivi
+            Bienvenue dans ton suivi !
           </h1>
           <p className="mt-3 text-lg text-gray-400">
-            Voici un aperçu de vos prochains rendez-vous.
+            Voici un aperçu de tes prochains rendez-vous.
           </p>
         </div>
 
@@ -31,9 +29,12 @@ export default function FollowupPage() {
                 <p className="text-sm font-medium text-[#7D5AE0]">
                   {prochainRdv.date}
                 </p>
-                <p className="text-2xl font-bold text-white">{prochainRdv.titre}</p>
+                <p className="text-2xl font-bold text-white">
+                  {prochainRdv.titre}
+                </p>
                 <p className="text-base text-gray-400">
-                  {prochainRdv.type} - Préparez vos notes et objectifs pour cette session.
+                  {prochainRdv.type} - Préparez vos notes et objectifs pour
+                  cette session.
                 </p>
                 <span className="inline-flex items-center rounded-full bg-green-100/20 text-green-300 px-4 py-1.5 text-sm font-medium w-fit">
                   {prochainRdv.statut}
@@ -43,7 +44,7 @@ export default function FollowupPage() {
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-sm font-medium text-gray-300">
-                    Temps avant le prochain rendez-vous
+                    Temps avant ton prochain rendez-vous :
                   </p>
                   <p className="text-sm font-bold text-[#663BD6]">
                     {prochainRdv.tempsRestant}

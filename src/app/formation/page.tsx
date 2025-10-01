@@ -354,9 +354,7 @@ export default function FormationPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-black/70 text-white border-white/10 backdrop-blur-md">
           <DialogHeader>
-            <DialogTitle>
-              Réserver {currentSession?.title}
-            </DialogTitle>
+            <DialogTitle>Réserver {currentSession?.title}</DialogTitle>
             <DialogDescription className="text-white/70">
               {currentSession
                 ? `Choisis le créneau qui te convient pour valider ta formation avec ${currentSession.formatter.name}.`
@@ -375,19 +373,22 @@ export default function FormationPage() {
             </div>
 
             {currentSession && (
-              <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-left flex items-center gap-3">
-                <Avatar
-                  name={currentSession.formatter.name}
-                  role={currentSession.formatter.role}
-                  avatar={currentSession.formatter.image}
-                />
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-white/60">
-                    Intervenant
-                  </p>
-                  <p className="mt-1 font-medium">
-                    {currentSession.formatter.name} · {currentSession.formatter.role}
-                  </p>
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-left">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={currentSession.formatter.image}
+                    alt={currentSession.formatter.name}
+                    className="h-14 w-14 rounded-full object-cover"
+                  />
+                  <div className="flex flex-col">
+                    <p className="text-sm uppercase tracking-wide text-white/60">
+                      Ton collègue qui fait la formation
+                    </p>
+                    <p className="mt-1 font-medium">
+                      {currentSession.formatter.name} ·{" "}
+                      {currentSession.formatter.role}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -398,7 +399,8 @@ export default function FormationPage() {
               </p>
               <div className="grid gap-3 sm:grid-cols-4">
                 {upcomingDays.map((day) => {
-                  const isSelected = selectedDate?.toDateString() === day.toDateString();
+                  const isSelected =
+                    selectedDate?.toDateString() === day.toDateString();
                   return (
                     <button
                       key={day.toISOString()}
