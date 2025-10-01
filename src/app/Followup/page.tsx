@@ -1,11 +1,36 @@
 // app/followup/page.tsx
 "use client";
 
+import { useMemo } from "react";
 import { prochainRdv, suivis } from "./data";
 import { CalendarClock, Users, Briefcase } from "lucide-react";
 import NavBar from "@/components/NavBar";
+import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
+import { sessions } from "@/app/formation/data";
 
 export default function FollowupPage() {
+  const { scheduledSessions } = useFormationSchedule();
+
+  const scheduledSuivis = useMemo(() => {
+    return scheduledSessions
+      .map((item) => {
+        const session = sessions.find((current) => current.id === item.sessionId);
+        if (!session) return null;
+
+        return {
+          id: `formation-${session.id}`,
+          titre: session.title,
+          type: session.subtitle,
+          date: item.slot,
+          statut: "Programmé" as const,
+          couleur: "violet" as const,
+        };
+      })
+      .filter((value): value is typeof suivis[number] => value !== null);
+  }, [scheduledSessions]);
+
+  const allSuivis = [...scheduledSuivis, ...suivis];
+
   return (
     <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12">
       <div className="mx-auto max-w-7xl flex flex-col gap-10 pt-30">
@@ -73,7 +98,7 @@ export default function FollowupPage() {
             Suivis à venir
           </h2>
 
-          {suivis.map((item) => (
+          {allSuivis.map((item) => (
             <div
               key={item.id}
               className="flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors cursor-pointer"
