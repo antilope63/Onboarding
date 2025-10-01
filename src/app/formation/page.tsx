@@ -14,9 +14,24 @@ import {
 } from "react";
 import Avatar from "@/components/Formation/Avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const LOOP_MULTIPLIER = 7;
 const BUFFER_CYCLES = 2;
+const DEFAULT_TIME_SLOTS = [
+  "09h00 - 10h30",
+  "11h00 - 12h30",
+  "14h00 - 15h30",
+  "16h00 - 17h30",
+];
 
 export default function FormationPage() {
   const baseLength = sessions.length;
@@ -24,10 +39,16 @@ export default function FormationPage() {
   const totalCards = baseLength * LOOP_MULTIPLIER;
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const cycleWidthRef = useRef(0);
   const isAdjustingRef = useRef(false);
+
+  const currentSession = sessions[currentIndex];
+  const timeSlots = currentSession ? DEFAULT_TIME_SLOTS : [];
 
   if (cardsRef.current.length !== totalCards) {
     cardsRef.current = Array.from({ length: totalCards }, () => null);
@@ -104,6 +125,12 @@ export default function FormationPage() {
       window.removeEventListener("resize", handleResize);
     };
   }, [baseLength, middleCycle, normalizeLoopIndex, updateCycleWidth]);
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setSelectedSlot(null);
+    }
+  }, [isDialogOpen, currentIndex]);
 
   // Pas d'auto-défilement vertical
   const handleWheel: WheelEventHandler<HTMLDivElement> = (event) => {
@@ -190,6 +217,24 @@ export default function FormationPage() {
     });
   };
 
+  const handleOpenDialog = () => {
+    if (currentSession?.done) return;
+
+    setSelectedSlot(null);
+    setSelectedDate(new Date());
+    setIsDialogOpen(true);
+  };
+
+  const handleConfirmReservation = () => {
+    if (!selectedSlot || !currentSession) return;
+
+    console.log(
+      `Réservation confirmée pour ${currentSession.title} - créneau ${selectedSlot}`
+    );
+    // Ferme le dialogue après la confirmation.
+    setIsDialogOpen(false);
+  };
+
   const handleKeyDown = (
     event: KeyboardEvent<HTMLDivElement>,
     loopIndex: number
@@ -207,6 +252,25 @@ export default function FormationPage() {
       </section>
     );
   }
+
+  const getNextDays = (count: number) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      return d;
+    });
+  };
+
+  const formatDayLabel = (d: Date) =>
+    d.toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+    });
+
+  const upcomingDays = getNextDays(7);
 
   return (
     <section className="relative flex min-h-screen w-full flex-col items-center justify-center gap-16 overflow-hidden bg-noir py-20">
@@ -268,22 +332,131 @@ export default function FormationPage() {
 
       <div className="text-center text-white flex flex-col items-center gap-4 max-w-[600px]">
         <Button
+          type="button"
           className={`rounded-full text-md p-6 ${
-            sessions[currentIndex]?.done
+            currentSession?.done
               ? "bg-gray-500 cursor-not-allowed opacity-60"
               : "bg-violet_fonce_1 hover:bg-violet cursor-pointer"
           }`}
-          disabled={sessions[currentIndex]?.done}
+          disabled={currentSession?.done}
+          onClick={handleOpenDialog}
         >
           Réserver une session 🤝
         </Button>
-        <p className="text-white/70">{sessions[currentIndex]?.description}</p>
+        <p className="text-white/70">{currentSession?.description}</p>
         <Avatar
-          name={sessions[currentIndex]?.formatter.name}
-          role={sessions[currentIndex]?.formatter.role}
-          avatar={sessions[currentIndex]?.formatter.image}
+          name={currentSession?.formatter.name}
+          role={currentSession?.formatter.role}
+          avatar={currentSession?.formatter.image}
         />
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-black/70 text-white border-white/10 backdrop-blur-md">
+          <DialogHeader>
+            <DialogTitle>
+              Réserver {currentSession?.title}
+            </DialogTitle>
+            <DialogDescription className="text-white/70">
+              {currentSession
+                ? `Choisis le créneau qui te convient pour valider ta formation avec ${currentSession.formatter.name}.`
+                : "Choisis le créneau qui te convient pour valider ta formation."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-left">
+              <p className="text-sm uppercase tracking-wide text-white/60">
+                Détails de la session
+              </p>
+              <p className="mt-2 text-lg font-semibold">
+                {currentSession?.subtitle}
+              </p>
+            </div>
+
+            {currentSession && (
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-left flex items-center gap-3">
+                <Avatar
+                  name={currentSession.formatter.name}
+                  role={currentSession.formatter.role}
+                  avatar={currentSession.formatter.image}
+                />
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-white/60">
+                    Intervenant
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {currentSession.formatter.name} · {currentSession.formatter.role}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <p className="text-sm uppercase tracking-wide text-white/60">
+                Choisis une date
+              </p>
+              <div className="grid gap-3 sm:grid-cols-4">
+                {upcomingDays.map((day) => {
+                  const isSelected = selectedDate?.toDateString() === day.toDateString();
+                  return (
+                    <button
+                      key={day.toISOString()}
+                      type="button"
+                      onClick={() => setSelectedDate(day)}
+                      className={`rounded-lg border p-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet_fonce_1 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0D2A] cursor-pointer select-none ${
+                        isSelected
+                          ? "border-violet_fonce_1 bg-violet_fonce_1/20 text-white"
+                          : "border-white/10 bg-white/5 text-white/80 hover:border-violet_fonce_1 hover:bg-violet_fonce_1/10 hover:text-white"
+                      }`}
+                    >
+                      {formatDayLabel(day)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {timeSlots.map((slot) => {
+                const isSelected = slot === selectedSlot;
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`rounded-lg border p-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet_fonce_1 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0D2A] cursor-pointer select-none ${
+                      isSelected
+                        ? "border-violet_fonce_1 bg-violet_fonce_1/20 text-white"
+                        : "border-white/10 bg-white/5 text-white/80 hover:border-violet_fonce_1 hover:bg-violet_fonce_1/10 hover:text-white"
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="border-white/20 bg-transparent text-white hover:bg-white/10"
+              >
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button
+              className="bg-violet_fonce_1 hover:bg-violet"
+              disabled={!selectedSlot || !selectedDate}
+              onClick={handleConfirmReservation}
+            >
+              Valider ce créneau
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <style jsx>{`
         .no-scrollbar {
@@ -292,6 +465,10 @@ export default function FormationPage() {
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none; /* Chrome, Safari, Opera */
+        }
+        :global([data-slot="dialog-overlay"]) {
+          background: rgba(0, 0, 0, 0.7) !important;
+          backdrop-filter: none;
         }
       `}</style>
     </section>
