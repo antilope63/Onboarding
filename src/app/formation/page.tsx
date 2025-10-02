@@ -2,19 +2,21 @@
 
 import NavBar from "@/components/NavBar";
 import SessionCard from "@/components/Formation/SessionCard";
-import { sessions } from "./data";
 import NoScroll from "@/components/NoScroll";
+import type { FormationSession } from "./data";
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type FormEvent,
   type KeyboardEvent,
   type WheelEventHandler,
 } from "react";
 import Avatar from "@/components/Formation/Avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogClose,
@@ -24,7 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
+import { useManagedSessions } from "@/hooks/useManagedSessions";
+import { Edit, Plus, Trash2 } from "lucide-react";
 
 const LOOP_MULTIPLIER = 7;
 const BUFFER_CYCLES = 2;
@@ -36,7 +41,9 @@ const DEFAULT_TIME_SLOTS = [
 ];
 
 export default function FormationPage() {
-  const baseLength = sessions.length;
+  const { sessions: sessionList, addSession, updateSession, removeSession } =
+    useManagedSessions();
+  const baseLength = sessionList.length;
   const middleCycle = Math.floor(LOOP_MULTIPLIER / 2);
   const totalCards = baseLength * LOOP_MULTIPLIER;
 
@@ -47,6 +54,119 @@ export default function FormationPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { scheduledSessions, scheduleSession, cancelSession } =
     useFormationSchedule();
+  const { role } = useAuth();
+  const canManageSessions = role === "manager";
+
+  const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [sessionForm, setSessionForm] = useState({
+    title: "",
+    subtitle: "",
+    description: "",
+    image: "",
+    formatterName: "",
+    formatterRole: "",
+    formatterImage: "",
+    done: false,
+  });
+
+  useEffect(() => {
+    if (baseLength === 0) {
+      setCurrentIndex(0);
+      return;
+    }
+    setCurrentIndex((prev) => Math.min(prev, baseLength - 1));
+  }, [baseLength]);
+
+  const openSessionDialog = useCallback(
+    (sessionToEdit?: FormationSession) => {
+      if (sessionToEdit) {
+        setSessionForm({
+          title: sessionToEdit.title,
+          subtitle: sessionToEdit.subtitle,
+          description: sessionToEdit.description,
+          image: sessionToEdit.image,
+          formatterName: sessionToEdit.formatter.name,
+          formatterRole: sessionToEdit.formatter.role,
+          formatterImage: sessionToEdit.formatter.image,
+          done: sessionToEdit.done,
+        });
+        setEditingSessionId(sessionToEdit.id);
+      } else {
+        setSessionForm({
+          title: "",
+          subtitle: "",
+          description: "",
+          image: "",
+          formatterName: "",
+          formatterRole: "",
+          formatterImage: "",
+          done: false,
+        });
+        setEditingSessionId(null);
+      }
+      setIsSessionDialogOpen(true);
+    },
+    []
+  );
+
+  const closeSessionDialog = useCallback(() => {
+    setIsSessionDialogOpen(false);
+    setEditingSessionId(null);
+    setSessionForm({
+      title: "",
+      subtitle: "",
+      description: "",
+      image: "",
+      formatterName: "",
+      formatterRole: "",
+      formatterImage: "",
+      done: false,
+    });
+  }, []);
+
+  const handleSessionSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!sessionForm.title.trim() || !sessionForm.subtitle.trim()) {
+        return;
+      }
+
+      const payload = {
+        title: sessionForm.title,
+        subtitle: sessionForm.subtitle,
+        description: sessionForm.description,
+        image: sessionForm.image || "/Formation/custom-session.jpg",
+        formatter: {
+          name: sessionForm.formatterName || "À définir",
+          role: sessionForm.formatterRole || "Coach",
+          image: sessionForm.formatterImage || "/Organigramme/homme1.jpeg",
+        },
+        done: sessionForm.done,
+      };
+
+      if (editingSessionId) {
+        updateSession(editingSessionId, payload);
+      } else {
+        addSession(payload);
+      }
+
+      closeSessionDialog();
+    },
+    [addSession, closeSessionDialog, editingSessionId, sessionForm, updateSession]
+  );
+
+  const handleSessionDelete = useCallback(
+    (id: string, title: string) => {
+      if (!window.confirm(`Supprimer la formation "${title}" ?`)) {
+        return;
+      }
+      removeSession(id);
+      cancelSession(id);
+    },
+    [cancelSession, removeSession]
+  );
+
   const scheduledById = useMemo(() => {
     return new Map(scheduledSessions.map((item) => [item.sessionId, item]));
   }, [scheduledSessions]);
@@ -55,7 +175,7 @@ export default function FormationPage() {
   const cycleWidthRef = useRef(0);
   const isAdjustingRef = useRef(false);
 
-  const currentSession = sessions[currentIndex];
+  const currentSession = sessionList[currentIndex];
   const currentScheduledSession = currentSession
     ? scheduledById.get(currentSession.id)
     : undefined;
@@ -299,8 +419,29 @@ export default function FormationPage() {
 
   if (baseLength === 0) {
     return (
-      <section className="flex min-h-screen items-center justify-center bg-noir text-white">
-        <p>Aucune session disponible.</p>
+      <section className="relative flex min-h-screen flex-col items-center justify-center gap-6 bg-noir text-white">
+        <NavBar classname="absolute top-0 left-0" />
+        <NoScroll />
+        <h1 className="text-4xl font-semibold">Aucune formation disponible pour le moment</h1>
+        {canManageSessions ? (
+          <>
+            <p className="text-white/70">
+              Ajoute une première session pour lancer le parcours onboarding.
+            </p>
+            <Button
+              type="button"
+              onClick={() => openSessionDialog()}
+              className="inline-flex items-center gap-2 rounded-full bg-violet_fonce_1 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet"
+            >
+              <Plus className="h-4 w-4" />
+              Créer une formation
+            </Button>
+          </>
+        ) : (
+          <p className="text-white/60">
+            Reviens bientôt, les responsables préparent de nouvelles sessions.
+          </p>
+        )}
       </section>
     );
   }
@@ -317,6 +458,16 @@ export default function FormationPage() {
         <p className="text-white/70 text-2xl">
           Tes collègues ont hâte de te rencontrer !
         </p>
+        {canManageSessions && (
+          <Button
+            type="button"
+            onClick={() => openSessionDialog()}
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet_fonce_1 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet"
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter une formation
+          </Button>
+        )}
       </div>
 
       <div className="w-full">
@@ -327,7 +478,7 @@ export default function FormationPage() {
         >
           {Array.from({ length: totalCards }, (_, idx) => {
             const baseIndex = idx % baseLength;
-            const session = sessions[baseIndex];
+            const session = sessionList[baseIndex];
             const cycle = Math.floor(idx / baseLength);
             const isActive = baseIndex === currentIndex;
             const scheduledSession = scheduledById.get(session.id);
@@ -342,13 +493,39 @@ export default function FormationPage() {
                 tabIndex={0}
                 onClick={() => activateCard(idx)}
                 onKeyDown={(event) => handleKeyDown(event, idx)}
-                className={`shrink-0 snap-center outline-none transition-all duration-300 ease-out ${
+                className={`relative shrink-0 snap-center outline-none transition-all duration-300 ease-out ${
                   isActive
                     ? "scale-100 opacity-100"
                     : "scale-[0.92] opacity-60 filter grayscale"
                 }`}
                 aria-current={isActive ? "true" : undefined}
               >
+                {canManageSessions && (
+                  <div className="absolute left-3 top-3 z-30 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openSessionDialog(session);
+                      }}
+                      className="flex items-center gap-1 rounded-full border border-white/30 bg-black/40 px-3 py-1 text-xs text-white/80 backdrop-blur transition hover:bg-white/10"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleSessionDelete(session.id, session.title);
+                      }}
+                      className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 backdrop-blur transition hover:bg-red-500/20"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </button>
+                  </div>
+                )}
                 <SessionCard
                   title={session.title}
                   subtitle={session.subtitle}
@@ -537,6 +714,180 @@ export default function FormationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {canManageSessions && (
+        <Dialog
+          open={isSessionDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) closeSessionDialog();
+          }}
+        >
+          <DialogContent className="bg-[#13162F] text-white border-white/10">
+            <DialogHeader>
+              <DialogTitle>
+                {editingSessionId
+                  ? "Modifier la formation"
+                  : "Nouvelle formation"}
+              </DialogTitle>
+              <DialogDescription className="text-white/70">
+                Renseigne les détails de la formation disponible pour ton
+                équipe.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSessionSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                  Titre
+                </label>
+                <Input
+                  value={sessionForm.title}
+                  onChange={(event) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      title: event.target.value,
+                    }))
+                  }
+                  placeholder="Ex: Unity | Introduction"
+                  className="border-white/20 bg-white/10 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                  Sous-titre
+                </label>
+                <Input
+                  value={sessionForm.subtitle}
+                  onChange={(event) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      subtitle: event.target.value,
+                    }))
+                  }
+                  placeholder="Thème principal"
+                  className="border-white/20 bg-white/10 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                  Description
+                </label>
+                <textarea
+                  value={sessionForm.description}
+                  onChange={(event) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      description: event.target.value,
+                    }))
+                  }
+                  placeholder="Décris le contenu de la formation"
+                  className="min-h-[140px] resize-y rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
+                />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                    Illustration
+                  </label>
+                  <Input
+                    value={sessionForm.image}
+                    onChange={(event) =>
+                      setSessionForm((prev) => ({
+                        ...prev,
+                        image: event.target.value,
+                      }))
+                    }
+                    placeholder="/Formation/...jpg"
+                    className="border-white/20 bg-white/10 text-white"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                    Formateur · Photo
+                  </label>
+                  <Input
+                    value={sessionForm.formatterImage}
+                    onChange={(event) =>
+                      setSessionForm((prev) => ({
+                        ...prev,
+                        formatterImage: event.target.value,
+                      }))
+                    }
+                    placeholder="/Organigramme/...jpeg"
+                    className="border-white/20 bg-white/10 text-white"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                    Formateur · Nom
+                  </label>
+                  <Input
+                    value={sessionForm.formatterName}
+                    onChange={(event) =>
+                      setSessionForm((prev) => ({
+                        ...prev,
+                        formatterName: event.target.value,
+                      }))
+                    }
+                    placeholder="Nom du formateur"
+                    className="border-white/20 bg-white/10 text-white"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                    Formateur · Rôle
+                  </label>
+                  <Input
+                    value={sessionForm.formatterRole}
+                    onChange={(event) =>
+                      setSessionForm((prev) => ({
+                        ...prev,
+                        formatterRole: event.target.value,
+                      }))
+                    }
+                    placeholder="Rôle"
+                    className="border-white/20 bg-white/10 text-white"
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  checked={sessionForm.done}
+                  onChange={(event) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      done: event.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border border-white/30 bg-white/10"
+                />
+                Formation déjà réalisée
+              </label>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeSessionDialog}
+                  className="border-white/30 text-white hover:bg-white/10"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-violet_fonce_1 hover:bg-violet"
+                >
+                  {editingSessionId ? "Enregistrer" : "Ajouter"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <style jsx>{`
         .no-scrollbar {

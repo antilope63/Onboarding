@@ -1,12 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  BookOpen,
-  FileSpreadsheet,
-  FileText,
-  FolderKanban,
-  Laptop,
-  ShieldCheck,
-} from "lucide-react";
+import { FileText, Laptop, ShieldCheck } from "lucide-react";
 
 export type FaqItem = {
   id: string;

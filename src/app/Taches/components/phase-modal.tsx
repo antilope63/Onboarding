@@ -12,6 +12,9 @@ interface PhaseModalProps {
   onClose: () => void
   onStatusChange: (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => void
   lockedPhaseIndices: Set<number>
+  canManageTasks?: boolean
+  onTaskEdit?: (phaseIndex: number, taskIndex: number) => void
+  onTaskDelete?: (phaseIndex: number, taskIndex: number) => void
 }
 
 const STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "done", "verified"]
@@ -29,6 +32,9 @@ export function PhaseModal({
   onClose,
   onStatusChange,
   lockedPhaseIndices,
+  canManageTasks = false,
+  onTaskEdit,
+  onTaskDelete,
 }: PhaseModalProps) {
   const stats = useMemo(() => {
     if (!phase) {
@@ -44,6 +50,7 @@ export function PhaseModal({
 
   const isLocked = phaseIndex !== null && lockedPhaseIndices.has(phaseIndex)
   const canEdit = phaseIndex !== null && !isLocked
+  const canManage = canManageTasks && !isLocked && phaseIndex !== null
 
   return (
     <AnimatePresence>
@@ -140,7 +147,9 @@ export function PhaseModal({
                       </div>
                       <ul className="grid gap-3 rounded-[24px] border border-white/8 bg-white/[0.04] p-4 sm:grid-cols-2">
                         {tasks.map(({ task, index: taskIndex }) => {
-                          const isReadonly = task.status === "verified" || !canEdit
+                          const isReadonly =
+                            !canEdit ||
+                            (task.status === "verified" && !canManage)
 
                           return (
                             <li
@@ -184,6 +193,49 @@ export function PhaseModal({
                                       {statusMeta[statusOption].label}
                                     </button>
                                   ))}
+                                </div>
+                              )}
+                              {canManage && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {task.status !== "verified" && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (phaseIndex !== null) {
+                                          onStatusChange(
+                                            phaseIndex,
+                                            taskIndex,
+                                            "verified"
+                                          )
+                                        }
+                                      }}
+                                      className="rounded-full border border-emerald-400/50 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-emerald-100 transition hover:bg-emerald-500/30 hover:text-white"
+                                    >
+                                      Valider
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (phaseIndex !== null) {
+                                        onTaskEdit?.(phaseIndex, taskIndex)
+                                      }
+                                    }}
+                                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white/80 transition hover:bg-white/20 hover:text-white"
+                                  >
+                                    Modifier
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (phaseIndex !== null) {
+                                        onTaskDelete?.(phaseIndex, taskIndex)
+                                      }
+                                    }}
+                                    className="rounded-full border border-red-400/50 bg-red-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-red-200 transition hover:bg-red-500/30 hover:text-white"
+                                  >
+                                    Supprimer
+                                  </button>
                                 </div>
                               )}
                             </li>

@@ -4,13 +4,6 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrgNode } from "@/types/org";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import Image from "next/image";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
@@ -36,8 +29,10 @@ function toRaw(node: OrgNode): RawNodeDatum {
   return {
     name: node.name,
     attributes: {
+      Id: node.id,
       Rôle: node.title,
       Image: node.image ?? "",
+      OriginalNode: node,
     },
     children: [...baseChildren, ...syntheticTeamLeaf],
   };
@@ -47,60 +42,16 @@ type Props = {
   data: OrgNode;
   width?: number;
   height?: number;
+  onSelectNode?: (node: OrgNode) => void;
 };
 
-export default function OrgD3Tree({ data }: Props) {
+export default function OrgD3Tree({ data, onSelectNode }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [translate, setTranslate] = useState<{ x: number; y: number }>({
     x: 0,
     y: 100,
   });
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<{
-    name: string;
-    role: string | undefined;
-    image: string | undefined;
-  } | null>(null);
-
-  function toAsciiLetters(input: string): string {
-    return input
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // retire les diacritiques
-      .replace(/[^a-zA-Z\s'-]/g, ""); // garde lettres/espaces/apostrophes/traits d'union
-  }
-
-  function generateEmailFromName(fullName: string): string {
-    const ascii = toAsciiLetters(fullName).trim();
-    const parts = ascii.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "contact@pixelplay.com";
-    const firstName = parts[0].toLowerCase().replace(/['-]/g, "");
-    const lastName = (parts[parts.length - 1] || "")
-      .toLowerCase()
-      .replace(/['-]/g, "");
-    if (lastName) return `${firstName}.${lastName}@pixelplay.com`;
-    return `${firstName}@pixelplay.com`;
-  }
-
-  function generateOfficeNumber(
-    name: string,
-    role: string | undefined
-  ): string {
-    const roleText = (role || "").toLowerCase();
-    const isFirstFloor =
-      roleText.includes("ceo") ||
-      roleText.includes("cto") ||
-      roleText.includes("coo") ||
-      roleText.includes("cfo") ||
-      roleText.includes("vp");
-
-    const base = isFirstFloor ? 100 : 0;
-    const hash =
-      Array.from(name).reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 100;
-    const number = base + Math.max(1, hash); // évite 000/100 exact
-    return String(number).padStart(3, "0"); // 0xx / 1xx
-  }
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -141,15 +92,16 @@ export default function OrgD3Tree({ data }: Props) {
             );
           }
 
+          const original = nodeDatum.attributes?.OriginalNode as
+            | OrgNode
+            | undefined;
+
           return (
             <g
               onClick={() => {
-                setSelectedPerson({
-                  name: nodeDatum.name,
-                  role: typeof role === "string" ? role : undefined,
-                  image: img || undefined,
-                });
-                setIsDialogOpen(true);
+                if (original) {
+                  onSelectNode?.(original);
+                }
               }}
               cursor="pointer"
             >
@@ -199,48 +151,6 @@ export default function OrgD3Tree({ data }: Props) {
         }}
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-bleu_fonce_2 text-white border-violet/30">
-          <DialogHeader>
-            <DialogTitle>{selectedPerson?.name}</DialogTitle>
-            {selectedPerson?.role && (
-              <DialogDescription className="text-violet-200">
-                {selectedPerson.role}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-
-          <div className="flex flex-col items-center gap-4">
-            {selectedPerson?.image ? (
-              <div className="relative w-40 h-40 md:w-56 md:h-56">
-                <Image
-                  src={selectedPerson.image}
-                  alt={selectedPerson.name || "avatar"}
-                  fill
-                  className="rounded-full object-cover shadow"
-                />
-              </div>
-            ) : (
-              <div className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-gray-500" />
-            )}
-
-            <div className="text-center space-y-1">
-              {selectedPerson?.name && (
-                <p className="text-sm text-gray-200">
-                  {generateEmailFromName(selectedPerson.name)}
-                </p>
-              )}
-              <p className="text-sm text-gray-200">
-                Bureau{" "}
-                {generateOfficeNumber(
-                  selectedPerson?.name || "",
-                  selectedPerson?.role
-                )}
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }

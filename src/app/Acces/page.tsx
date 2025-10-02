@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Check, Clock, X, Send, Copy } from "lucide-react";
+import { useState, useRef, useEffect, FormEvent } from "react";
+import { Check, Clock, X, Send, Copy, Edit, Trash2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import NavBar from "@/components/NavBar";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AccessDashboard() {
   const [activeTab, setActiveTab] = useState<"mesAcces" | "mesDemandes">(
@@ -19,8 +23,16 @@ export default function AccessDashboard() {
     left: 0,
     width: 0,
   });
+  type AccessEntry = {
+    id: number;
+    outil: string;
+    type: string;
+    statut: string;
+    login: string;
+    password: string;
+  };
 
-  const accessList = [
+  const [accessEntries, setAccessEntries] = useState<AccessEntry[]>([
     {
       id: 1,
       outil: "Outil de conception 3D",
@@ -61,10 +73,10 @@ export default function AccessDashboard() {
       login: "user5",
       password: "pass5",
     },
-  ];
+  ]);
 
   const countStatut = (statut: string) =>
-    accessList.filter((a) => a.statut === statut).length;
+    accessEntries.filter((a) => a.statut === statut).length;
 
   // Historique des demandes (onglet "Mes Demandes")
   type AccessRequest = {
@@ -99,6 +111,22 @@ export default function AccessDashboard() {
     },
   ]);
 
+  const { role } = useAuth();
+  const canManageAccess = role === "manager" || role === "rh";
+  const canAcceptRequests = role === "manager";
+
+  const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
+  const [editingAccessId, setEditingAccessId] = useState<number | null>(null);
+  const [accessForm, setAccessForm] = useState<Omit<AccessEntry, "id">>(
+    () => ({
+      outil: "",
+      type: "Accès complet",
+      statut: "Actif",
+      login: "",
+      password: "",
+    })
+  );
+
   // Etat du formulaire de demande
   const [formTool, setFormTool] = useState("Game Engine X");
   const [formType, setFormType] = useState("Lecture");
@@ -116,6 +144,79 @@ export default function AccessDashboard() {
     setRequests((prev) => [...prev, newRequest]);
     toast.success("Demande envoyée avec succès");
     setFormJustification("");
+  };
+
+  const openAccessDialog = (entry?: AccessEntry) => {
+    if (entry) {
+      const { id, ...rest } = entry;
+      setAccessForm(rest);
+      setEditingAccessId(id);
+    } else {
+      setAccessForm({
+        outil: "",
+        type: "Accès complet",
+        statut: "Actif",
+        login: "",
+        password: "",
+      });
+      setEditingAccessId(null);
+    }
+    setIsAccessDialogOpen(true);
+  };
+
+  const handleAccessFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!accessForm.outil.trim() || !accessForm.login.trim()) {
+      toast.error("Complétez au moins l'outil et l'identifiant");
+      return;
+    }
+
+    setAccessEntries((prev) => {
+      if (editingAccessId !== null) {
+        return prev.map((entry) =>
+          entry.id === editingAccessId ? { ...entry, ...accessForm } : entry
+        );
+      }
+
+      const nextId = prev.length
+        ? Math.max(...prev.map((entry) => entry.id)) + 1
+        : 1;
+
+      return [...prev, { id: nextId, ...accessForm }];
+    });
+
+    toast.success(
+      editingAccessId ? "Accès mis à jour" : "Accès ajouté avec succès"
+    );
+    setIsAccessDialogOpen(false);
+    setEditingAccessId(null);
+  };
+
+  const handleDeleteAccess = (id: number) => {
+    const entry = accessEntries.find((item) => item.id === id);
+    if (!entry) return;
+
+    const confirmed = window.confirm(
+      `Supprimer l'accès pour "${entry.outil}" (${entry.login}) ?`
+    );
+    if (!confirmed) return;
+
+    setAccessEntries((prev) => prev.filter((item) => item.id !== id));
+    toast.success("Accès supprimé");
+  };
+
+  const handleAcceptRequest = (id: number) => {
+    setRequests((prev) =>
+      prev.map((request) =>
+        request.id === id ? { ...request, statut: "Acceptée" } : request
+      )
+    );
+    toast.success("Demande acceptée");
+  };
+
+  const closeAccessDialog = () => {
+    setIsAccessDialogOpen(false);
+    setEditingAccessId(null);
   };
 
   useEffect(() => {
@@ -210,6 +311,18 @@ export default function AccessDashboard() {
               </div>
             </div>
 
+            {canManageAccess && (
+              <div className="flex justify-end mb-6">
+                <Button
+                  type="button"
+                  onClick={() => openAccessDialog()}
+                  className="rounded-full bg-violet_fonce_1 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet"
+                >
+                  Ajouter un accès
+                </Button>
+              </div>
+            )}
+
             <div className="rounded-xl border border-[#22254C] bg-[#1D1E3B] p-6 overflow-x-auto">
               <table className="min-w-full text-left">
                 <thead className="border-b border-[#22254C]">
@@ -229,10 +342,15 @@ export default function AccessDashboard() {
                     <th className="px-6 py-3 text-sm font-medium text-gray-400">
                       Mot de passe
                     </th>
+                    {canManageAccess && (
+                      <th className="px-6 py-3 text-sm font-medium text-gray-400">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22254C]">
-                  {accessList.map((item) => (
+                  {accessEntries.map((item) => (
                     <tr key={item.id}>
                       <td className="px-6 py-4">{item.outil}</td>
                       <td className="px-6 py-4">{item.type}</td>
@@ -268,6 +386,26 @@ export default function AccessDashboard() {
                           <Copy className="w-4 h-4" />
                         </button>
                       </td>
+                      {canManageAccess && (
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <button
+                              className="flex items-center gap-2 rounded-full border border-white/20 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
+                              onClick={() => openAccessDialog(item)}
+                            >
+                              <Edit className="w-4 h-4" />
+                              Modifier
+                            </button>
+                            <button
+                              className="flex items-center gap-2 rounded-full border border-red-400/50 px-3 py-1 text-xs text-red-200 transition hover:bg-red-500/20"
+                              onClick={() => handleDeleteAccess(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -294,6 +432,11 @@ export default function AccessDashboard() {
                     <th className="px-6 py-3 text-sm text-gray-400">
                       Demandé le
                     </th>
+                    {canAcceptRequests && (
+                      <th className="px-6 py-3 text-sm text-gray-400">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22254C]">
@@ -324,6 +467,23 @@ export default function AccessDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-300">{req.date}</td>
+                      {canAcceptRequests && (
+                        <td className="px-6 py-4">
+                          {req.statut === "En attente" ? (
+                            <button
+                              className="flex items-center gap-2 rounded-full border border-green-400/50 px-3 py-1 text-xs text-green-200 transition hover:bg-green-500/20"
+                              onClick={() => handleAcceptRequest(req.id)}
+                            >
+                              <Check className="w-4 h-4" />
+                              Accepter
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              Gestion terminée
+                            </span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -390,6 +550,131 @@ export default function AccessDashboard() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={isAccessDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeAccessDialog();
+        }}
+      >
+        <DialogContent className="bg-[#1D1E3B] text-white border-[#22254C]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingAccessId ? "Modifier l'accès" : "Nouvel accès"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAccessFormSubmit} className="space-y-4">
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                Outil / Plateforme
+              </label>
+              <Input
+                value={accessForm.outil}
+                onChange={(event) =>
+                  setAccessForm((prev) => ({
+                    ...prev,
+                    outil: event.target.value,
+                  }))
+                }
+                placeholder="Nom de l'outil"
+                className="border-white/20 bg-white/5 text-white"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                Type de droit
+              </label>
+              <select
+                value={accessForm.type}
+                onChange={(event) =>
+                  setAccessForm((prev) => ({
+                    ...prev,
+                    type: event.target.value,
+                  }))
+                }
+                className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
+              >
+                <option value="Accès complet">Accès complet</option>
+                <option value="Accès en lecture seule">
+                  Accès en lecture seule
+                </option>
+                <option value="Accès limité">Accès limité</option>
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                Statut
+              </label>
+              <select
+                value={accessForm.statut}
+                onChange={(event) =>
+                  setAccessForm((prev) => ({
+                    ...prev,
+                    statut: event.target.value,
+                  }))
+                }
+                className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
+              >
+                <option value="Actif">Actif</option>
+                <option value="En attente">En attente</option>
+                <option value="Rejeté">Rejeté</option>
+              </select>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                  Identifiant
+                </label>
+                <Input
+                  value={accessForm.login}
+                  onChange={(event) =>
+                    setAccessForm((prev) => ({
+                      ...prev,
+                      login: event.target.value,
+                    }))
+                  }
+                  placeholder="Identifiant"
+                  className="border-white/20 bg-white/5 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                  Mot de passe
+                </label>
+                <Input
+                  value={accessForm.password}
+                  onChange={(event) =>
+                    setAccessForm((prev) => ({
+                      ...prev,
+                      password: event.target.value,
+                    }))
+                  }
+                  placeholder="Mot de passe"
+                  className="border-white/20 bg-white/5 text-white"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeAccessDialog}
+                className="border-white/30 text-white hover:bg-white/10"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                className="bg-violet_fonce_1 hover:bg-violet"
+              >
+                {editingAccessId ? "Enregistrer" : "Créer l'accès"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
