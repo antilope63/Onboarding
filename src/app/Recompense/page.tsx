@@ -7,7 +7,7 @@ import {
   FileText,
   Settings,
   CheckCircle,
- CheckSquare,
+  CheckSquare,
 } from "lucide-react"; // Icônes shadcn/lucide
 
 export default function AchievementPage() {
@@ -18,7 +18,8 @@ export default function AchievementPage() {
         <div className="text-center">
           <h1 className="text-5xl font-bold">Félicitations !</h1>
           <p className="mt-4 text-lg text-gray-400">
-            Vous avez terminé votre intégration et débloqué votre statut d'employé PixelPlay !
+            Vous avez terminé votre intégration et débloqué votre statut
+            d&apos;employé PixelPlay !
           </p>
         </div>
 
@@ -35,23 +36,25 @@ export default function AchievementPage() {
             <p className="text-sm font-medium uppercase tracking-wider text-[#7D5AE0]">
               Succès débloqué
             </p>
-            <h2 className="text-3xl font-bold mt-1 text-white">Intégration terminée !</h2>
+            <h2 className="text-3xl font-bold mt-1 text-white">
+              Intégration terminée !
+            </h2>
             <p className="mt-2">
-              Bienvenue dans l'équipe ! Vous êtes prêt à commencer votre aventure chez PixelPlay.
+              Bienvenue dans l&apos;équipe ! Vous êtes prêt à commencer votre
+              aventure chez PixelPlay.
             </p>
           </div>
           <a
-  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-    "https://ton-site.com" // remplace par l'URL que tu veux partager
-  )}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="mt-4 sm:mt-0 bg-[#7D5AE0] text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 hover:bg-[#663BD6] transition-all duration-200"
->
-  <Share2 className="w-5 h-5" />
-  Partager
-</a>
-
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+              "https://ton-site.com"
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 sm:mt-0 bg-[#7D5AE0] text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 hover:bg-[#663BD6] transition-all duration-200"
+          >
+            <Share2 className="w-5 h-5" />
+            Partager
+          </a>
         </div>
 
         {/* Carte statut employé */}
@@ -67,7 +70,9 @@ export default function AchievementPage() {
             <p className="text-sm font-medium uppercase tracking-wider text-[#7D5AE0]">
               Nouveau statut
             </p>
-            <h2 className="text-3xl font-bold mt-1 text-white">Employé PixelPlay</h2>
+            <h2 className="text-3xl font-bold mt-1 text-white">
+              Employé PixelPlay
+            </h2>
             <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-sm text-[#7D5AE0]">
               <ShieldCheck className="w-5 h-5" />
               <span>Niveau 1</span>
