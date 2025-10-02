@@ -1,3 +1,13 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  FileSpreadsheet,
+  FileText,
+  FolderKanban,
+  Laptop,
+  ShieldCheck,
+} from "lucide-react";
+
 export type FaqItem = {
   id: string;
   question: string;
@@ -5,6 +15,180 @@ export type FaqItem = {
   tags?: string[];
   category: string;
 };
+
+export type DocumentLink = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  category: string;
+  external?: boolean;
+};
+
+export type ProjectFolder = {
+  id: string;
+  name: string;
+  description: string;
+  summary: string;
+  driveUrl?: string;
+  documents: Array<{
+    id: string;
+    note?: string;
+  }>;
+  accentColor?: string;
+};
+
+export const DOCUMENT_LINKS: DocumentLink[] = [
+  {
+    id: "Charte Graphique",
+    title: "Charte Graphique",
+    description: "Consultez la Charte Graphique de Pixelpay.",
+    href: "/Charte Graphique.pdf",
+    icon: FileText,
+    category: "Direction Artistique",
+  },
+  {
+    id: "Git normes",
+    title: "Normes Git",
+    description:
+      "Consultez les normes sur les commits, les branches, les PRs et plus... de Pixelpay.",
+    href: "/Normes_Git.pdf",
+    icon: Laptop,
+    category: "Documentations techniques",
+  },
+  {
+    id: "Visuel de Xarus",
+    title: "Visuel de Xarus",
+    description: "Tout les visuel pour le developpement de Xarus.",
+    href: "/Visuel_de_Xarus.pdf",
+    icon: ShieldCheck,
+    category: "Xarus",
+  },
+  {
+    id: "Tactile de Xarus",
+    title: "Tactile de Xarus",
+    description: "Tout les tactile pour le developpement de Xarus.",
+    href: "/Tactile_de_Xarus.pdf",
+    icon: ShieldCheck,
+    category: "Xarus",
+  },
+  {
+    id: "Explication du jeux de Xarus",
+    title: "Brainstorming de Xarus",
+    description: "Tout le brainstorming sur le jeux Xarus.",
+    href: "/Brainstorming_de_Xarus.pdf",
+    icon: ShieldCheck,
+    category: "Xarus",
+  },
+  {
+    id: "Visuel de Gysxo",
+    title: "Visuel de Gysxo",
+    description: "Tout les visuel pour le developpement de Gysxo.",
+    href: "/Visuel_de_Gysxo.pdf",
+    icon: ShieldCheck,
+    category: "Gysxo",
+  },
+  {
+    id: "Tactile de Gysxo",
+    title: "Tactile de Gysxo",
+    description: "Tout les tactile pour le developpement de Gysxo.",
+    href: "/Tactile_de_Gysxo.pdf",
+    icon: ShieldCheck,
+    category: "Gysxo",
+  },
+  {
+    id: "Explication du jeux de Gysxo",
+    title: "Brainstorming de Gysxo",
+    description: "Tout le brainstorming sur le jeux Gysxo.",
+    href: "/Brainstorming_de_Gysxo.pdf",
+    icon: ShieldCheck,
+    category: "Gysxo",
+  },
+  {
+    id: "Visuel de Support & Ops",
+    title: "Visuel de Support & Ops",
+    description: "Tout le visuel pour le developpement de Support & Ops.",
+    href: "/Visuel_de_Support_&_Ops.pdf",
+    icon: ShieldCheck,
+    category: "Support & Ops",
+  },
+  {
+    id: "Tactile de Support & Ops",
+    title: "Tactile de Support & Ops",
+    description: "Tout le tactile pour le developpement de Support & Ops.",
+    href: "/Tactile_de_Support_&_Ops.pdf",
+    icon: ShieldCheck,
+    category: "Support & Ops",
+  },
+  {
+    id: "Explication du jeux de Support & Ops",
+    title: "Brainstorming de Support & Ops",
+    description: "Tout le brainstorming sur le jeux Support & Ops.",
+    href: "/Brainstorming_de_Support_&_Ops.pdf",
+    icon: ShieldCheck,
+    category: "Support & Ops",
+  },
+];
+
+export const PROJECT_FOLDERS: ProjectFolder[] = [
+  {
+    id: "Xarus",
+    name: "Xarus",
+    description: "Jeux mobile",
+    summary: `Xarus est un jeu mobile en développement qui mélange aventure et stratégie. Le joueur incarne un explorateur envoyé sur une planète inconnue, Xarus, où il doit survivre, découvrir des ressources et bâtir sa propre base. L’objectif est de progresser à travers différents environnements, affronter des créatures locales et débloquer de nouvelles technologies pour évoluer.
+Le jeu est pensé pour être accessible rapidement (sessions courtes, gameplay intuitif) mais avec une vraie profondeur grâce à des missions, des améliorations et une dimension multijoueur légère (coopération et petits défis entre amis).
+Notre but avec Xarus est de proposer une expérience immersive, fun et progressive, adaptée aux joueurs mobiles qui veulent à la fois se détendre et relever des défis.`,
+    driveUrl:
+      "https://drive.google.com/drive/folders/1bBX0g4-h4U7mK5pGwK_Z3W74Zv-zOo-9",
+    accentColor: "from-bleu_fonce_2 to-violet_fonce_1",
+    documents: [
+      { id: "Visuel de Xarus", note: "Visuel du jeux" },
+      { id: "Tactile de Xarus", note: "Tactile du jeux" },
+      {
+        id: "Explication du jeux de Xarus",
+        note: "Notes de l'avancement et des réunions",
+      },
+    ],
+  },
+  {
+    id: "Gysxo",
+    name: "Gysxo",
+    description: "Jeux PS5",
+    summary: `Gysxo est un jeu d’action-aventure exclusif PS5 qui plonge le joueur dans un univers futuriste en pleine guerre des dimensions. On incarne un héros capable de manipuler la gravité et le temps pour explorer des mondes fragmentés, affronter des ennemis spectaculaires et résoudre des énigmes complexes.
+Le jeu mise sur la puissance graphique de la PS5 et l'immersion du DualSense pour offrir des combats dynamiques, des environnements vivants et une narration cinématographique.
+L'objectif avec Gysxo est de créer une expérience épique, intense et innovante, qui marie gameplay nerveux et scénario riche.`,
+    driveUrl:
+      "https://drive.google.com/drive/folders/1bBX0g4-h4U7mK5pGwK_Z3W74Zv-zOo-9",
+    accentColor: "from-bleu_fonce_2 to-violet_fonce_1",
+    documents: [
+      { id: "Visuel de Gysxo", note: "Visuel du jeux" },
+      { id: "Tactile de Gysxo", note: "Tactile du jeux" },
+      {
+        id: "Explication du jeux de Gysxo",
+        note: "Notes de l'avancement et des réunions",
+      },
+    ],
+  },
+  {
+    id: "Support & Ops",
+    name: "Support & Ops",
+    description: "Support et Ops",
+    summary:
+      "Playbooks, scripts d'appels et matrices de décision pour accompagner les marchands Support & Ops. Inclut les procédures d'escalade et KPI clés.",
+    driveUrl:
+      "https://drive.google.com/drive/folders/1bBX0g4-h4U7mK5pGwK_Z3W74Zv-zOo-9",
+    accentColor: "from-bleu_fonce_1 to-violet",
+    documents: [
+      { id: "Visuel de Support & Ops", note: "Contacts partenaires" },
+      { id: "Tactile de Support & Ops", note: "Culture & ton" },
+      {
+        id: "Explication du jeux de Support & Ops",
+        note: "Sessions de coaching",
+      },
+    ],
+  },
+];
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
@@ -59,7 +243,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "link-externe",
     question: "Dois-je utiliser Link de Next pour un lien externe ?",
     answer:
-      "Ce n’est pas recommandé. Utilisez une balise <a> avec target=\"_blank\" et rel=\"noopener noreferrer\" pour les liens externes. Link est optimisé pour la navigation interne (préchargement, transitions) et n’apporte pas d’avantage pour un site externe.\n\nPensez à signaler visuellement qu’un lien s’ouvre dans un nouvel onglet (icône, texte d’accompagnement) pour améliorer l’UX.",
+      'Ce n’est pas recommandé. Utilisez une balise <a> avec target="_blank" et rel="noopener noreferrer" pour les liens externes. Link est optimisé pour la navigation interne (préchargement, transitions) et n’apporte pas d’avantage pour un site externe.\n\nPensez à signaler visuellement qu’un lien s’ouvre dans un nouvel onglet (icône, texte d’accompagnement) pour améliorer l’UX.',
     tags: ["nextjs", "link", "a"],
     category: "UI & Frontend",
   },
@@ -67,7 +251,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "securite-rel",
     question: "À quoi servent noopener et noreferrer ?",
     answer:
-      "noopener empêche la page ouverte via target=\"_blank\" d’accéder à window.opener, ce qui neutralise les attaques de tabnabbing et isole mieux le contexte. noreferrer supprime l’en-tête Referer, améliorant la confidentialité (mais peut impacter l’attribution analytique).\n\nEn pratique, utilisez rel=\"noopener noreferrer\" par défaut. Si vous avez besoin du Referer pour la mesure, gardez rel=\"noopener\" seul.",
+      'noopener empêche la page ouverte via target="_blank" d’accéder à window.opener, ce qui neutralise les attaques de tabnabbing et isole mieux le contexte. noreferrer supprime l’en-tête Referer, améliorant la confidentialité (mais peut impacter l’attribution analytique).\n\nEn pratique, utilisez rel="noopener noreferrer" par défaut. Si vous avez besoin du Referer pour la mesure, gardez rel="noopener" seul.',
     tags: ["sécurité", "liens"],
     category: "UI & Frontend",
   },
@@ -123,9 +307,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "erreurs-communes",
     question: "Erreurs courantes et solutions ?",
     answer:
-      "1) Chemins alias incorrects: vérifiez la config tsconfig/baseUrl/paths et importez via '@/...'. 2) Classes Tailwind dynamiques: évitez les interpolations non déclaratives; préférez les variantes ou ajoutez une safelist si nécessaire. 3) Liens externes: toujours utiliser rel=\"noopener noreferrer\" avec target=\"_blank\".\n\nBonus: surveillez les warnings de build, contrôlez les tailles de bundles, et utilisez des ESLint rules adaptées pour prévenir les régressions.",
+      '1) Chemins alias incorrects: vérifiez la config tsconfig/baseUrl/paths et importez via \'@/...\'. 2) Classes Tailwind dynamiques: évitez les interpolations non déclaratives; préférez les variantes ou ajoutez une safelist si nécessaire. 3) Liens externes: toujours utiliser rel="noopener noreferrer" avec target="_blank".\n\nBonus: surveillez les warnings de build, contrôlez les tailles de bundles, et utilisez des ESLint rules adaptées pour prévenir les régressions.',
     tags: ["debug", "pièges"],
     category: "Ops & Qualité",
   },
 ];
-
