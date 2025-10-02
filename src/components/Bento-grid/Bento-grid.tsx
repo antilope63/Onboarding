@@ -7,7 +7,7 @@ import {
   BentoCardProps,
   BentoGrid,
 } from "@/components/ui/bento-grid";
-
+import { prochainRdvDate } from "@/app/Followup/data";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -167,7 +167,7 @@ export default function Bento_Doug() {
     {
       Icon: CalendarIcon,
       name: "Follow up",
-      description: "Votre prochain follow-up est le ",
+      description: "Votre prochain follow-up est " + prochainRdvDate.date,
       href: "/Followup",
       cta: "Aller au follow-up",
       iconColor: Iconcolor,
