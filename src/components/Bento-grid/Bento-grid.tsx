@@ -1,13 +1,13 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
+import { prochainRdvDate } from "@/app/Reunion/data";
 import { Task, getPhaseStats, phases } from "@/app/Taches/data";
 import {
   BentoCard,
   BentoCardProps,
   BentoGrid,
 } from "@/components/ui/bento-grid";
-import { prochainRdvDate } from "@/app/Followup/data";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -166,10 +166,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: CalendarIcon,
-      name: "Follow up",
-      description: "Votre prochain follow-up est " + prochainRdvDate.date,
-      href: "/Followup",
-      cta: "Aller au follow-up",
+      name: "Réunion",
+      description: "Votre prochaine Réunion est " + prochainRdvDate.date,
+      href: "/Réunion",
+      cta: "Aller au Réunion",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
