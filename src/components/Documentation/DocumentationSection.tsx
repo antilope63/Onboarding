@@ -117,15 +117,14 @@ export default function DocumentationSection({
           aria-label="Dossiers de documentation"
         >
           {PROJECT_FOLDERS.map((folder) => {
-            const docEntries = folder.documents
-              .map(({ id, note }) => {
+            type DocEntry = { doc: DocumentLink; note?: string };
+
+            const docEntries: DocEntry[] = folder.documents.flatMap(
+              ({ id, note }) => {
                 const doc = DOCUMENTS_BY_ID[id];
-                if (!doc) return null;
-                return { doc, note };
-              })
-              .filter((value): value is { doc: DocumentLink; note?: string } =>
-                Boolean(value)
-              );
+                return doc ? [{ doc, note }] : [];
+              }
+            );
 
             return (
               <Dialog key={folder.id}>
