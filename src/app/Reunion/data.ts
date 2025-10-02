@@ -7,6 +7,8 @@ export type Suivi = {
   date: string;
   statut: "Obligatoire" | "Optionnel" | "Programmé";
   couleur: "vert" | "violet" | "orange" | "gris";
+  startAt?: string;
+  endAt?: string;
 };
 
 export const prochainRdv = {
