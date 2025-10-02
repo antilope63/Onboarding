@@ -82,7 +82,7 @@ export default function FormulairePage() {
               {/* Q3 */}
               <div className="space-y-4">
                 <h3 className="text-2xl font-semibold">
-                  3. Sur une échelle de 1 à 5, qu&apos;as-tu pensé de l&apos;outil d&apos;onboarding de PixelPlay ?
+                  3. Qu&apos;as-tu pensé de l&apos;outil d&apos;onboarding de PixelPlay ?
                 </h3>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-300 text-lg">Mauvais</span>
