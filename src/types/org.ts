@@ -4,5 +4,6 @@ export type OrgNode = {
   title: string; // Rôle/position
   image?: string;
   count?: number; // Taille d'équipe optionnelle
+  parentId?: string | null;
   children?: OrgNode[];
 };

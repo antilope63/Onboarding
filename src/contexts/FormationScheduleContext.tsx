@@ -10,26 +10,32 @@ import {
   type ReactNode,
 } from "react";
 
-export type ScheduledSession = {
-  sessionId: string;
-  slot: string;
-  date: string;
-  updatedAt: number;
-};
+import type { ScheduledSession } from "@/types/formation";
+import {
+  clearScheduledSessions,
+  deleteScheduledSession,
+  listScheduledSessions,
+  upsertScheduledSession,
+} from "@/lib/supabase/services/formation";
 
 type FormationScheduleContextValue = {
   scheduledSessions: ScheduledSession[];
-  scheduleSession: (sessionId: string, slot: string, date: string) => void;
-  cancelSession: (sessionId: string) => void;
-  clearAll: () => void;
+  isLoading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+  scheduleSession: (sessionId: string, slot: string, date: string) => Promise<void>;
+  cancelSession: (sessionId: string) => Promise<void>;
+  clearAll: () => Promise<void>;
 };
 
 const FormationScheduleContext =
   createContext<FormationScheduleContextValue | null>(null);
 
-const STORAGE_KEY = "formation-schedule";
-const STORAGE_MODE =
-  process.env.NEXT_PUBLIC_FORMATION_STORAGE === "session" ? "session" : "local";
+function sortSessions(values: ScheduledSession[]): ScheduledSession[] {
+  return [...values].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+}
 
 export function FormationScheduleProvider({
   children,
@@ -39,112 +45,71 @@ export function FormationScheduleProvider({
   const [scheduledSessions, setScheduledSessions] = useState<
     ScheduledSession[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const storage =
-        STORAGE_MODE === "session"
-          ? window.sessionStorage
-          : window.localStorage;
-      const raw = storage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return;
-      const safeSessions = parsed
-        .map((item: unknown): ScheduledSession | null => {
-          if (!item || typeof item !== "object") return null;
-          const candidate = item as Partial<ScheduledSession> & {
-            date?: unknown;
-          };
-          if (
-            typeof candidate.sessionId !== "string" ||
-            typeof candidate.slot !== "string"
-          ) {
-            return null;
-          }
-
-          const dateValue =
-            typeof candidate.date === "string"
-              ? candidate.date
-              : new Date().toISOString();
-          const parsedDate = new Date(dateValue);
-          if (Number.isNaN(parsedDate.getTime())) {
-            return null;
-          }
-
-          return {
-            sessionId: candidate.sessionId,
-            slot: candidate.slot,
-            date: parsedDate.toISOString(),
-            updatedAt:
-              typeof candidate.updatedAt === "number"
-                ? candidate.updatedAt
-                : parsedDate.getTime(),
-          };
-        })
-        .filter((value): value is ScheduledSession => value !== null)
-        .sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-
-      // Purge automatique des programmations passées (avant aujourd'hui)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const upcoming = safeSessions.filter(
-        (s) => new Date(s.date).getTime() >= today.getTime()
-      );
-
-      setScheduledSessions(upcoming);
-    } catch (error) {
-      console.warn("Impossible de charger les sessions programmées", error);
+      const data = await listScheduledSessions();
+      setScheduledSessions(sortSessions(data));
+      setError(null);
+    } catch (err) {
+      console.error("FormationSchedule: fetch failed", err);
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storage =
-      STORAGE_MODE === "session" ? window.sessionStorage : window.localStorage;
-    storage.setItem(STORAGE_KEY, JSON.stringify(scheduledSessions));
-  }, [scheduledSessions]);
+    void refresh();
+  }, [refresh]);
 
   const scheduleSession = useCallback(
-    (sessionId: string, slot: string, date: string) => {
-      const safeDate = new Date(date);
-      if (Number.isNaN(safeDate.getTime())) {
-        return;
-      }
-
-      setScheduledSessions((previous) => {
-        const next = previous.filter((item) => item.sessionId !== sessionId);
-        const payload: ScheduledSession = {
-          sessionId,
-          slot,
-          date: safeDate.toISOString(),
-          updatedAt: Date.now(),
-        };
-
-        return [...next, payload].sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-      });
+    async (sessionId: string, slot: string, date: string) => {
+      const saved = await upsertScheduledSession({ sessionId, slot, date });
+      setScheduledSessions((previous) =>
+        sortSessions([
+          ...previous.filter((session) => session.sessionId !== saved.sessionId),
+          saved,
+        ])
+      );
     },
     []
   );
 
-  const cancelSession = useCallback((sessionId: string) => {
+  const cancelSession = useCallback(async (sessionId: string) => {
+    await deleteScheduledSession(sessionId);
     setScheduledSessions((previous) =>
-      previous.filter((item) => item.sessionId !== sessionId)
+      previous.filter((session) => session.sessionId !== sessionId)
     );
   }, []);
 
-  const clearAll = useCallback(() => {
+  const clearAll = useCallback(async () => {
+    await clearScheduledSessions();
     setScheduledSessions([]);
   }, []);
 
   const value = useMemo(
-    () => ({ scheduledSessions, scheduleSession, cancelSession, clearAll }),
-    [scheduledSessions, scheduleSession, cancelSession, clearAll]
+    () => ({
+      scheduledSessions,
+      isLoading,
+      error,
+      refresh,
+      scheduleSession,
+      cancelSession,
+      clearAll,
+    }),
+    [
+      scheduledSessions,
+      isLoading,
+      error,
+      refresh,
+      scheduleSession,
+      cancelSession,
+      clearAll,
+    ]
   );
 
   return (

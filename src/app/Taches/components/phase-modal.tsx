@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
-import type { Phase, TaskStatus } from "../data"
+import type { Phase, TaskStatus } from "@/types/tasks"
 import { statusMeta } from "./status-meta"
 
 interface PhaseModalProps {

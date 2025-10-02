@@ -1,4 +1,4 @@
-import type { TaskStatus } from "../data"
+import type { TaskStatus } from "@/types/tasks"
 
 type StatusStyle = {
   label: string

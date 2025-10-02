@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useCallback, useMemo, useState } from "react"
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 
 import NavBar from "@/components/NavBar"
 import OrgD3Tree from "@/components/Organigramme/Organigramme-d3-tree"
@@ -16,7 +16,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import type { OrgNode } from "@/types/org"
-import { data } from "./data"
+import {
+  createOrgNode as createNodeInDb,
+  deleteOrgNode as deleteNodeInDb,
+  fetchOrgTree,
+  updateOrgNode as updateNodeInDb,
+} from "@/lib/supabase/services/org"
 
 function cloneNode(node: OrgNode): OrgNode {
   return {
@@ -111,7 +116,36 @@ function computeOfficeNumber(name: string, role?: string): string {
 }
 
 export default function OrganigrammePage() {
-  const [treeData, setTreeData] = useState<OrgNode>(() => cloneNode(data))
+  const [treeData, setTreeData] = useState<OrgNode | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        const fetched = await fetchOrgTree()
+        if (!active) return
+        setTreeData(fetched ? cloneNode(fetched) : null)
+        setError(null)
+      } catch (err) {
+        if (!active) return
+        console.error("Organigramme: unable to load tree", err)
+        setError(err instanceof Error ? err.message : "Erreur inconnue")
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void load()
+
+    return () => {
+      active = false
+    }
+  }, [])
   const { role } = useAuth()
   const canManage = role === "manager" || role === "rh"
 
@@ -152,8 +186,8 @@ export default function OrganigrammePage() {
     setIsDialogOpen(true)
   }, [])
 
-  const handleSaveNode = useCallback(() => {
-    if (!selectedNode) return
+  const handleSaveNode = useCallback(async () => {
+    if (!selectedNode || !treeData) return
 
     const trimmedName = editForm.name.trim() || selectedNode.name
     const trimmedTitle = editForm.title.trim() || selectedNode.title
@@ -163,24 +197,36 @@ export default function OrganigrammePage() {
     const safeCount =
       trimmedCount && !Number.isNaN(parsedCount) ? parsedCount : undefined
 
-    setTreeData((previous) => {
-      const next = updateNodeById(previous, selectedNode.id, (node) => ({
-        ...node,
+    try {
+      await updateNodeInDb(selectedNode.id, {
         name: trimmedName,
         title: trimmedTitle,
-        image: trimmedImage ? trimmedImage : undefined,
+        image: trimmedImage || undefined,
         count: safeCount,
-      }))
-      const refreshed = findNodeById(next, selectedNode.id)
-      setSelectedNode(refreshed)
-      return next
-    })
-  }, [editForm, selectedNode])
+      })
+
+      setTreeData((previous) => {
+        if (!previous) return previous
+        const next = updateNodeById(previous, selectedNode.id, (node) => ({
+          ...node,
+          name: trimmedName,
+          title: trimmedTitle,
+          image: trimmedImage ? trimmedImage : undefined,
+          count: safeCount,
+        }))
+        const refreshed = findNodeById(next, selectedNode.id)
+        setSelectedNode(refreshed)
+        return next
+      })
+    } catch (err) {
+      console.error("Organigramme: unable to update node", err)
+    }
+  }, [editForm, selectedNode, treeData])
 
   const handleAddChild = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
-      if (!selectedNode) return
+      if (!selectedNode || !treeData) return
       if (!childForm.name.trim() || !childForm.title.trim()) {
         return
       }
@@ -190,39 +236,73 @@ export default function OrganigrammePage() {
       const safeCount =
         trimmedCount && !Number.isNaN(parsedCount) ? parsedCount : undefined
 
-      const newChild: OrgNode = {
-        id:
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `member-${Date.now()}`,
-        name: childForm.name.trim(),
-        title: childForm.title.trim(),
-        image: childForm.image.trim() || undefined,
-        count: safeCount,
+      try {
+        const created = await createNodeInDb({
+          parentId: selectedNode.id,
+          name: childForm.name.trim(),
+          title: childForm.title.trim(),
+          image: childForm.image.trim() || undefined,
+          count: safeCount,
+        })
+
+        setTreeData((previous) => {
+          if (!previous) return previous
+          const next = addChildToNode(previous, selectedNode.id, created)
+          const refreshed = findNodeById(next, selectedNode.id)
+          setSelectedNode(refreshed)
+          return next
+        })
+
+        setChildForm({ name: "", title: "", image: "", count: "" })
+      } catch (err) {
+        console.error("Organigramme: unable to create node", err)
       }
-
-      setTreeData((previous) => {
-        const next = addChildToNode(previous, selectedNode.id, newChild)
-        const refreshed = findNodeById(next, selectedNode.id)
-        setSelectedNode(refreshed)
-        return next
-      })
-
-      setChildForm({ name: "", title: "", image: "", count: "" })
     },
-    [childForm, selectedNode]
+    [childForm, selectedNode, treeData]
   )
 
-  const handleDeleteNode = useCallback(() => {
-    if (!selectedNode) return
+  const handleDeleteNode = useCallback(async () => {
+    if (!selectedNode || !treeData) return
     if (selectedNode.id === treeData.id) return
     if (!window.confirm(`Supprimer ${selectedNode.name} et son équipe ?`)) {
       return
     }
-    setTreeData((previous) => removeNodeById(previous, selectedNode.id))
-    setSelectedNode(null)
-    setIsDialogOpen(false)
-  }, [selectedNode, treeData.id])
+
+    try {
+      await deleteNodeInDb(selectedNode.id)
+      setTreeData((previous) =>
+        previous ? removeNodeById(previous, selectedNode.id) : previous
+      )
+      setSelectedNode(null)
+      setIsDialogOpen(false)
+    } catch (err) {
+      console.error("Organigramme: unable to delete node", err)
+    }
+  }, [selectedNode, treeData])
+
+  if (isLoading) {
+    return (
+      <section className="relative flex min-h-screen w-full flex-col items-center justify-center bg-noir text-white">
+        Chargement de l&apos;organigramme...
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="relative flex min-h-screen w-full flex-col items-center justify-center bg-noir text-white">
+        <p className="text-red-300">{error}</p>
+      </section>
+    )
+  }
+
+  if (!treeData) {
+    return (
+      <section className="relative flex min-h-screen w-full flex-col items-center justify-center bg-noir text-white">
+        <p>Aucun organigramme disponible.</p>
+      </section>
+    )
+  }
 
   return (
     <section className="relative flex min-h-screen w-full flex-col items-center gap-8 bg-noir">

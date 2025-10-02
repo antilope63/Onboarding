@@ -8,7 +8,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { prochainRdv, suivis, type Suivi } from "./data";
+import type { FollowupHighlight, FollowupMeeting } from "@/types/followup";
+import {
+  createFollowupMeeting,
+  deleteFollowupMeeting,
+  fetchFollowupHighlight,
+  listFollowupMeetings,
+  updateFollowupMeeting,
+} from "@/lib/supabase/services/followups";
 import {
   CalendarClock,
   Users,
@@ -33,27 +40,75 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+function sortMeetings(values: FollowupMeeting[]): FollowupMeeting[] {
+  return [...values].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export default function FollowupPage() {
   const { scheduledSessions } = useFormationSchedule();
   const { sessions: sessionList } = useManagedSessions();
   const { role } = useAuth();
   const canManageMeetings = role === "manager" || role === "rh";
 
-  const [meetings, setMeetings] = useState<Suivi[]>(suivis);
+  const [meetings, setMeetings] = useState<FollowupMeeting[]>([]);
+  const [highlight, setHighlight] = useState<FollowupHighlight | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [highlightRow, meetingRows] = await Promise.all([
+          fetchFollowupHighlight(),
+          listFollowupMeetings(),
+        ]);
+        if (!active) return;
+        setHighlight(highlightRow);
+        setMeetings(sortMeetings(meetingRows));
+        setError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("FollowupPage: failed to load data", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      active = false;
+    };
+  }, []);
   const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
   const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null);
   const [meetingForm, setMeetingForm] = useState({
     titre: "",
     type: "",
     date: "",
-    statut: "Programmé" as Suivi["statut"],
-    couleur: "violet" as Suivi["couleur"],
+    statut: "Programmé" as FollowupMeeting["statut"],
+    couleur: "violet" as FollowupMeeting["couleur"],
   });
 
   const manualIds = useMemo(
     () => new Set(meetings.map((meeting) => meeting.id)),
     [meetings]
   );
+
+  const highlightDate = highlight?.date ?? "À définir";
+  const highlightTitle =
+    highlight?.titre ?? "Aucun rendez-vous n'est planifié";
+  const highlightType = highlight?.type ?? "";
+  const highlightStatus = highlight?.statut ?? "Programmé";
+  const highlightRemaining = highlight?.tempsRestant ?? "—";
+  const highlightProgress = highlight?.progression ?? 0;
+  const highlightImage = highlight?.image;
 
   const [activeTab, setActiveTab] = useState<"liste" | "calendrier">("liste");
   const listeRef = useRef<HTMLButtonElement>(null);
@@ -79,7 +134,7 @@ export default function FollowupPage() {
     setEditingMeetingId(null);
   };
 
-  const openMeetingDialog = (meeting?: Suivi) => {
+  const openMeetingDialog = (meeting?: FollowupMeeting) => {
     if (meeting) {
       setMeetingForm({
         titre: meeting.titre,
@@ -100,37 +155,59 @@ export default function FollowupPage() {
     resetMeetingForm();
   };
 
-  const handleMeetingSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleMeetingSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!meetingForm.titre.trim() || !meetingForm.date.trim()) {
+    const titre = meetingForm.titre.trim();
+    const date = meetingForm.date.trim();
+    if (!titre || !date) {
       return;
     }
 
-    setMeetings((previous) => {
+    const basePayload = {
+      titre,
+      type: meetingForm.type.trim(),
+      date,
+      statut: meetingForm.statut,
+      couleur: meetingForm.couleur,
+    };
+
+    try {
       if (editingMeetingId) {
-        return previous.map((meeting) =>
-          meeting.id === editingMeetingId
-            ? { id: editingMeetingId, ...meetingForm }
-            : meeting
+        const updated = await updateFollowupMeeting(editingMeetingId, basePayload);
+        setMeetings((previous) =>
+          sortMeetings(
+            previous.map((meeting) =>
+              meeting.id === editingMeetingId ? updated : meeting
+            )
+          )
         );
+      } else {
+        const created = await createFollowupMeeting({
+          ...basePayload,
+          startAt: null,
+          endAt: null,
+        });
+        setMeetings((previous) => sortMeetings([...previous, created]));
       }
 
-      const newId =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `meeting-${Date.now()}`;
-
-      return [...previous, { id: newId, ...meetingForm }];
-    });
-
-    closeMeetingDialog();
+      closeMeetingDialog();
+    } catch (err) {
+      console.error("FollowupPage: unable to save meeting", err);
+    }
   };
 
-  const handleMeetingDelete = (meeting: Suivi) => {
+  const handleMeetingDelete = async (meeting: FollowupMeeting) => {
     if (!window.confirm(`Supprimer la réunion "${meeting.titre}" ?`)) {
       return;
     }
-    setMeetings((previous) => previous.filter((item) => item.id !== meeting.id));
+    try {
+      await deleteFollowupMeeting(meeting.id);
+      setMeetings((previous) =>
+        previous.filter((item) => item.id !== meeting.id)
+      );
+    } catch (err) {
+      console.error("FollowupPage: unable to delete meeting", err);
+    }
   };
 
   const scheduledSuivis = useMemo(() => {
@@ -150,7 +227,7 @@ export default function FollowupPage() {
           month: "long",
         });
 
-        const suivi: Suivi = {
+        const suivi: FollowupMeeting = {
           id: `formation-${session.id}`,
           titre: session.title,
           type: session.subtitle,
@@ -163,7 +240,8 @@ export default function FollowupPage() {
         return { order: plannedDate.getTime(), suivi };
       })
       .filter(
-        (value): value is { order: number; suivi: Suivi } => value !== null
+        (value): value is { order: number; suivi: FollowupMeeting } =>
+          value !== null
       )
       .sort((a, b) => a.order - b.order)
       .map((entry) => entry.suivi);
@@ -173,6 +251,25 @@ export default function FollowupPage() {
     () => [...scheduledSuivis, ...meetings],
     [scheduledSuivis, meetings]
   );
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12 flex items-center justify-center">
+        <p className="text-white/70 text-lg">Chargement du suivi...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12 flex flex-col items-center justify-center gap-4 text-center">
+        <h1 className="text-2xl font-semibold text-white">
+          Impossible de charger les suivis
+        </h1>
+        <p className="text-white/70">{error}</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12">
@@ -193,17 +290,18 @@ export default function FollowupPage() {
             <div className="p-8 flex flex-col justify-between flex-1">
               <div className="flex flex-col gap-3">
                 <p className="text-sm font-medium text-[#7D5AE0]">
-                  {prochainRdv.date}
+                  {highlightDate}
                 </p>
                 <p className="text-2xl font-bold text-white">
-                  {prochainRdv.titre}
+                  {highlightTitle}
                 </p>
                 <p className="text-base text-gray-400">
-                  {prochainRdv.type} - Préparez vos notes et objectifs pour
-                  cette session.
+                  {highlightType
+                    ? `${highlightType} - Préparez vos notes et objectifs pour cette session.`
+                    : "Préparez vos notes et objectifs pour cette session."}
                 </p>
                 <span className="inline-flex items-center rounded-full bg-green-100/20 text-green-300 px-4 py-1.5 text-sm font-medium w-fit">
-                  {prochainRdv.statut}
+                  {highlightStatus}
                 </span>
               </div>
 
@@ -213,13 +311,13 @@ export default function FollowupPage() {
                     Temps avant ton prochain rendez-vous :
                   </p>
                   <p className="text-sm font-bold text-[#663BD6]">
-                    {prochainRdv.tempsRestant}
+                    {highlightRemaining}
                   </p>
                 </div>
                 <div className="w-full bg-[#22254C] rounded-full h-3">
                   <div
                     className="bg-[#663BD6] h-3 rounded-full"
-                    style={{ width: `${prochainRdv.progression}%` }}
+                    style={{ width: `${highlightProgress}%` }}
                   />
                 </div>
               </div>
@@ -227,7 +325,11 @@ export default function FollowupPage() {
 
             <div
               className="w-full md:w-1/3 bg-cover bg-center min-h-[250px]"
-              style={{ backgroundImage: `url(${prochainRdv.image})` }}
+              style={
+                highlightImage
+                  ? { backgroundImage: `url(${highlightImage})` }
+                  : { background: "linear-gradient(135deg,#1D1E3B,#151635)" }
+              }
             />
           </div>
         </div>
@@ -300,7 +402,7 @@ export default function FollowupPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleMeetingDelete(item)}
+                        onClick={() => void handleMeetingDelete(item)}
                         className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 transition hover:bg-red-500/20"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -448,7 +550,7 @@ export default function FollowupPage() {
                     onChange={(event) =>
                       setMeetingForm((prev) => ({
                         ...prev,
-                        statut: event.target.value as Suivi["statut"],
+                        statut: event.target.value as FollowupMeeting["statut"],
                       }))
                     }
                     className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
@@ -467,7 +569,7 @@ export default function FollowupPage() {
                     onChange={(event) =>
                       setMeetingForm((prev) => ({
                         ...prev,
-                        couleur: event.target.value as Suivi["couleur"],
+                        couleur: event.target.value as FollowupMeeting["couleur"],
                       }))
                     }
                     className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
