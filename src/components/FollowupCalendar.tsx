@@ -8,12 +8,31 @@ import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { useMemo, useState } from "react";
 import { add, startOfDay } from "date-fns";
+
+// Source de vérité des suivis statiques (renommé: Followup -> Reunion)
+import { suivis } from "@/app/Reunion/data";
+import { EventClickArg } from "@fullcalendar/core"; // <--- CORRECT
+import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
+import { sessions as formationSessions } from "@/app/formation/data";
+
+export default function FollowupCalendar() {
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  // Lit les réservations de formation (persistées via le provider global)
+  const { scheduledSessions } = useFormationSchedule();
+
+  // Map sessionId -> métadonnées formation (titre, formateur, etc.)
+  const idToFormation = useMemo(
+    () => new Map(formationSessions.map((s) => [s.id, s])),
+    []
+  );
+
 import { EventClickArg } from "@fullcalendar/core"; // <--- CORRECT
 import type { Suivi } from "@/app/Reunion/data";
 
 type FollowupCalendarProps = {
   suivis: Suivi[];
 };
+
 
 type CalendarEventDetails = {
   id: string;
@@ -48,6 +67,7 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
       timePart = dotParts[1];
     }
 
+    if (descriptor.toLowerCase().includes("demain")) {
     const normalizedTime = (timePart ?? "09:00")
       .replace(/h/i, ":")
       .replace(/\s+/g, "");
@@ -65,6 +85,24 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
         now.getFullYear(),
         now.getMonth(),
         now.getDate() + 1,
+        Number(hour),
+        Number(minute)
+      );
+    }
+    if (descriptor.toLowerCase().includes("la semaine prochaine")) {
+      return add(startOfDay(now), {
+        weeks: 1,
+        hours: Number(hour),
+        minutes: Number(minute),
+      });
+    }
+    if (descriptor.toLowerCase().includes("dans 2 semaines")) {
+      return add(startOfDay(now), {
+        weeks: 2,
+        hours: Number(hour),
+        minutes: Number(minute),
+      });
+    }
         Number.isNaN(hour) ? 9 : hour,
         Number.isNaN(minute) ? 0 : minute
       );
@@ -115,6 +153,10 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
       now.getFullYear(),
       now.getMonth(),
       now.getDate(),
+      Number(hour),
+      Number(minute)
+    );
+
       Number.isNaN(hour) ? 9 : hour,
       Number.isNaN(minute) ? 0 : minute
     );
@@ -140,7 +182,8 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
     return add(fallbackStart, { hours: 1 });
   }
 
-  const events = useMemo(
+  // 1) Événements issus des suivis statiques (libellés en texte -> Date)
+  const staticEvents = useMemo(
     () =>
       suivis.map((item) => {
         const start = resolveStartDate(item);
@@ -162,6 +205,36 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
         };
       }),
     [suivis]
+  );
+
+  // 2) Événements issus des réservations de formation (dates ISO déjà fiables)
+  const formationEvents = useMemo(
+    () =>
+      scheduledSessions.map((item) => {
+        const meta = idToFormation.get(item.sessionId);
+        const start = new Date(item.date);
+        const end = add(start, { hours: 1 });
+        return {
+          id: `formation-${item.sessionId}`,
+          title: meta?.title ?? "Formation programmée",
+          start,
+          end,
+          backgroundColor: "#7D5AE0",
+          borderColor: "transparent",
+          textColor: "#ffffff",
+          extendedProps: {
+            type: meta ? `Avec ${meta.formatter.name}` : "Formation",
+            statut: "Programmé",
+          },
+        };
+      }),
+    [scheduledSessions, idToFormation]
+  );
+
+  // 3) Fusion pour l'affichage du calendrier
+  const events = useMemo(
+    () => [...staticEvents, ...formationEvents],
+    [staticEvents, formationEvents]
   );
 
   function handleEventClick(arg: EventClickArg) {
