@@ -1,11 +1,18 @@
 // app/followup/page.tsx
 "use client";
 
-
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { prochainRdv, suivis, type Suivi } from "./data";
-import { CalendarClock, Users, Briefcase, Plus, Edit, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  Users,
+  Briefcase,
+  Plus,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import NavBar from "@/components/NavBar";
+import FollowupCalendar from "@/components/FollowupCalendar";
 import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
 import { useManagedSessions } from "@/hooks/useManagedSessions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +48,19 @@ export default function FollowupPage() {
     () => new Set(meetings.map((meeting) => meeting.id)),
     [meetings]
   );
+
+  const [activeTab, setActiveTab] = useState<"liste" | "calendrier">("liste");
+  const listeRef = useRef<HTMLButtonElement>(null);
+  const calendrierRef = useRef<HTMLButtonElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const activeRef = activeTab === "liste" ? listeRef : calendrierRef;
+    if (activeRef.current) {
+      const { offsetLeft, offsetWidth } = activeRef.current;
+      setIndicatorStyle({ left: offsetLeft, width: offsetWidth });
+    }
+  }, [activeTab]);
 
   const resetMeetingForm = () => {
     setMeetingForm({
@@ -104,7 +124,9 @@ export default function FollowupPage() {
     if (!window.confirm(`Supprimer la réunion "${meeting.titre}" ?`)) {
       return;
     }
-    setMeetings((previous) => previous.filter((item) => item.id !== meeting.id));
+    setMeetings((previous) =>
+      previous.filter((item) => item.id !== meeting.id)
+    );
   };
 
   const scheduledSuivis = useMemo(() => {
@@ -131,6 +153,8 @@ export default function FollowupPage() {
           date: `${dateLabel} · ${item.slot}`,
           statut: "Programmé",
           couleur: "violet",
+          startAt: item.date,
+          endAt: new Date(plannedDate.getTime() + 60 * 60 * 1000).toISOString(),
         };
         return { order: plannedDate.getTime(), suivi };
       })
@@ -141,45 +165,35 @@ export default function FollowupPage() {
       .map((entry) => entry.suivi);
   }, [scheduledSessions, sessionList]);
 
-  const allSuivis = [...scheduledSuivis, ...meetings];
-=======
-import { useState, useRef, useEffect } from "react";
-import { prochainRdv, suivis } from "./data";
-import { CalendarClock, Users, Briefcase } from "lucide-react";
-import BackButton from "@/components/BackButton";
-import FollowupCalendar from "@/components/FollowupCalendar";
-
-export default function FollowupPage() {
-  const [activeTab, setActiveTab] = useState<"liste" | "calendrier">("liste");
-
-  const listeRef = useRef<HTMLButtonElement>(null);
-  const calendrierRef = useRef<HTMLButtonElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-
-  useEffect(() => {
-    const activeRef = activeTab === "liste" ? listeRef : calendrierRef;
-    if (activeRef.current) {
-      const { offsetLeft, offsetWidth } = activeRef.current;
-      setIndicatorStyle({ left: offsetLeft, width: offsetWidth });
-    }
-  }, [activeTab]);
+  const allSuivis = useMemo(
+    () => [...scheduledSuivis, ...meetings],
+    [scheduledSuivis, meetings]
+  );
 
   return (
     <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12">
-      <div className="mx-auto max-w-7xl flex flex-col gap-10">
-        <BackButton label="Retour" href="/" className="mb-4" />
+      <div className="mx-auto max-w-7xl flex flex-col gap-10 pt-30 relative">
+        <NavBar classname="absolute top-0 left-0" />
 
         <div>
-          <h1 className="text-5xl font-bold tracking-tighter text-white">Bienvenue dans votre suivi</h1>
-          <p className="mt-3 text-lg text-gray-400">Voici un aperçu de vos prochains rendez-vous.</p>
+          <h1 className="text-5xl font-bold tracking-tighter text-white">
+            Bienvenue dans ton suivi !
+          </h1>
+          <p className="mt-3 text-lg text-gray-400">
+            Voici un aperçu de tes prochains rendez-vous.
+          </p>
         </div>
 
         <div className="rounded-xl border border-[#22254C] shadow-xl overflow-hidden bg-[#1D1E3B] min-h-[250px]">
           <div className="md:flex md:items-stretch">
             <div className="p-8 flex flex-col justify-between flex-1">
               <div className="flex flex-col gap-3">
-                <p className="text-sm font-medium text-[#7D5AE0]">{prochainRdv.date}</p>
-                <p className="text-2xl font-bold text-white">{prochainRdv.titre}</p>
+                <p className="text-sm font-medium text-[#7D5AE0]">
+                  {prochainRdv.date}
+                </p>
+                <p className="text-2xl font-bold text-white">
+                  {prochainRdv.titre}
+                </p>
                 <p className="text-base text-gray-400">
                   {prochainRdv.type} - Préparez vos notes et objectifs pour
                   cette session.
@@ -191,99 +205,126 @@ export default function FollowupPage() {
 
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-gray-300">Temps avant le prochain rendez-vous</p>
-                  <p className="text-sm font-bold text-[#663BD6]">{prochainRdv.tempsRestant}</p>
+                  <p className="text-sm font-medium text-gray-300">
+                    Temps avant ton prochain rendez-vous :
+                  </p>
+                  <p className="text-sm font-bold text-[#663BD6]">
+                    {prochainRdv.tempsRestant}
+                  </p>
                 </div>
                 <div className="w-full bg-[#22254C] rounded-full h-3">
-                  <div className="bg-[#663BD6] h-3 rounded-full" style={{ width: `${prochainRdv.progression}%` }} />
+                  <div
+                    className="bg-[#663BD6] h-3 rounded-full"
+                    style={{ width: `${prochainRdv.progression}%` }}
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="w-full md:w-1/3 bg-cover bg-center min-h-[250px]" style={{ backgroundImage: `url(${prochainRdv.image})` }} />
+            <div
+              className="w-full md:w-1/3 bg-cover bg-center min-h-[250px]"
+              style={{ backgroundImage: `url(${prochainRdv.image})` }}
+            />
           </div>
         </div>
 
         <div className="flex flex-col gap-5 p-6 rounded-lg bg-[#1D1E3B] border border-[#22254C] shadow-lg">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Suivis à venir
+            </h2>
 
-          <h2 className="text-2xl font-bold tracking-tight text-white">
-            Suivis à venir
-          </h2>
-          {canManageMeetings && (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                onClick={() => openMeetingDialog()}
-                className="inline-flex items-center gap-2 rounded-full bg-violet_fonce_1 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet"
-              >
-                <Plus className="h-4 w-4" />
-                Programmer un suivi
-              </Button>
-            </div>
-          )}
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+              <div className="relative flex bg-[#22254C] rounded-lg p-1 self-start">
+                <div
+                  className="absolute top-1 bottom-1 bg-[#7D5AE0] rounded-md transition-all duration-500 ease-in-out"
+                  style={{
+                    left: indicatorStyle.left,
+                    width: indicatorStyle.width,
+                  }}
+                />
+                <button
+                  ref={listeRef}
+                  onClick={() => setActiveTab("liste")}
+                  className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${
+                    activeTab === "liste"
+                      ? "text-white"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  Liste
+                </button>
+                <button
+                  ref={calendrierRef}
+                  onClick={() => setActiveTab("calendrier")}
+                  className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${
+                    activeTab === "calendrier"
+                      ? "text-white"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  Calendrier
+                </button>
+              </div>
 
-          {allSuivis.map((item) => (
-            <div
-              key={item.id}
-              className="relative flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors"
-            >
-              {canManageMeetings && manualIds.has(item.id) && (
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openMeetingDialog(item)}
-                    className="flex items-center gap-1 rounded-full border border-white/25 bg-black/30 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMeetingDelete(item)}
-                    className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 transition hover:bg-red-500/20"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Supprimer
-                  </button>
-                </div>
+              {canManageMeetings && (
+                <Button
+                  type="button"
+                  onClick={() => openMeetingDialog()}
+                  className="inline-flex items-center gap-2 rounded-full bg-violet_fonce_1 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet"
+                >
+                  <Plus className="h-4 w-4" />
+                  Programmer un suivi
+                </Button>
               )}
-              {/* Icône dynamique */}
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight text-white">Suivis à venir</h2>
-
-            {/* Switch Liste | Calendrier */}
-            <div className="relative flex bg-[#22254C] rounded-lg p-1">
-              <div
-                className="absolute top-1 bottom-1 bg-[#7D5AE0] rounded-md transition-all duration-500 ease-in-out"
-                style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
-              />
-              <button
-                ref={listeRef}
-                onClick={() => setActiveTab("liste")}
-                className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "liste" ? "text-white" : "text-gray-300 hover:text-white"}`}
-              >
-                Liste
-              </button>
-              <button
-                ref={calendrierRef}
-                onClick={() => setActiveTab("calendrier")}
-                className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "calendrier" ? "text-white" : "text-gray-300 hover:text-white"}`}
-              >
-                Calendrier
-              </button>
             </div>
           </div>
 
           {activeTab === "liste" ? (
             <div className="flex flex-col gap-4">
-              {suivis.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors cursor-pointer">
+              {allSuivis.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors"
+                >
+                  {canManageMeetings && manualIds.has(item.id) && (
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openMeetingDialog(item)}
+                        className="flex items-center gap-1 rounded-full border border-white/25 bg-black/30 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMeetingDelete(item)}
+                        className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 transition hover:bg-red-500/20"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Supprimer
+                      </button>
+                    </div>
+                  )}
                   <div
                     className={`flex items-center justify-center rounded-lg shrink-0 w-12 h-12 ${
-                      item.couleur === "vert" ? "bg-green-500/20 text-green-400" : item.couleur === "violet" ? "bg-[#7D5AE0]/20 text-[#7D5AE0]" : item.couleur === "orange" ? "bg-orange-500/20 text-orange-400" : "bg-gray-700 text-gray-400"
+                      item.couleur === "vert"
+                        ? "bg-green-500/20 text-green-400"
+                        : item.couleur === "violet"
+                        ? "bg-[#7D5AE0]/20 text-[#7D5AE0]"
+                        : item.couleur === "orange"
+                        ? "bg-orange-500/20 text-orange-400"
+                        : "bg-gray-700 text-gray-400"
                     }`}
                   >
-                    {item.couleur === "vert" ? <CalendarClock className="w-6 h-6" /> : item.couleur === "violet" ? <Briefcase className="w-6 h-6" /> : <Users className="w-6 h-6" />}
+                    {item.couleur === "vert" ? (
+                      <CalendarClock className="w-6 h-6" />
+                    ) : item.couleur === "violet" ? (
+                      <Briefcase className="w-6 h-6" />
+                    ) : (
+                      <Users className="w-6 h-6" />
+                    )}
                   </div>
 
                   <div className="flex flex-col justify-center flex-1">
@@ -292,10 +333,18 @@ export default function FollowupPage() {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-300">{item.date}</p>
+                    <p className="text-sm font-medium text-gray-300">
+                      {item.date}
+                    </p>
                     <span
                       className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        item.couleur === "vert" ? "bg-green-100/20 text-green-300" : item.couleur === "violet" ? "bg-[#7D5AE0]/20 text-[#7D5AE0]" : item.couleur === "orange" ? "bg-orange-100/20 text-orange-400" : "bg-gray-600 text-gray-300"
+                        item.couleur === "vert"
+                          ? "bg-green-100/20 text-green-300"
+                          : item.couleur === "violet"
+                          ? "bg-[#7D5AE0]/20 text-[#7D5AE0]"
+                          : item.couleur === "orange"
+                          ? "bg-orange-100/20 text-orange-400"
+                          : "bg-gray-600 text-gray-300"
                       }`}
                     >
                       {item.statut}
@@ -303,10 +352,16 @@ export default function FollowupPage() {
                   </div>
                 </div>
               ))}
+
+              {allSuivis.length === 0 && (
+                <p className="text-center text-sm text-gray-400">
+                  Aucun suivi planifié pour le moment.
+                </p>
+              )}
             </div>
           ) : (
             <div className="h-[650px]">
-              <FollowupCalendar />
+              <FollowupCalendar suivis={allSuivis} />
             </div>
           )}
         </div>
@@ -327,8 +382,8 @@ export default function FollowupPage() {
                   : "Programmer une réunion"}
               </DialogTitle>
               <DialogDescription className="text-white/70">
-                Planifie un suivi personnalisé pour accompagner l&apos;arrivée de
-                ton talent.
+                Planifie un suivi personnalisé pour accompagner l&apos;arrivée
+                de ton talent.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleMeetingSubmit} className="space-y-4">

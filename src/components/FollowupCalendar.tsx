@@ -8,59 +8,175 @@ import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { useMemo, useState } from "react";
 import { add, startOfDay } from "date-fns";
-import { suivis } from "@/app/Followup/data";
 import { EventClickArg } from "@fullcalendar/core"; // <--- CORRECT
+import type { Suivi } from "@/app/Reunion/data";
 
-export default function FollowupCalendar() {
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+type FollowupCalendarProps = {
+  suivis: Suivi[];
+};
 
-  // Conversion des dates
+type CalendarEventDetails = {
+  id: string;
+  title: string;
+  start?: Date;
+  end?: Date;
+  type?: string;
+  statut?: Suivi["statut"];
+};
+
+export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventDetails | null>(
+    null
+  );
+
+  // Conversion des dates textuelles en Date quand aucune valeur précise n'est fournie.
   function convertDate(label: string): Date {
     const now = new Date();
-    const parts = label.split(",").map((s) => s.trim());
-    const descriptor = parts[0] ?? "";
-    const timePart = parts[1] ?? "09:00";
-    const [hour = "9", minute = "0"] = timePart.split(":");
+    const commaParts = label
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    let descriptor = commaParts[0] ?? label;
+    let timePart = commaParts[1];
 
-    if (descriptor.toLowerCase().includes("demain")) {
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, Number(hour), Number(minute));
+    if (!timePart && descriptor.includes("·")) {
+      const dotParts = descriptor
+        .split("·")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      descriptor = dotParts[0] ?? descriptor;
+      timePart = dotParts[1];
     }
-    if (descriptor.toLowerCase().includes("la semaine prochaine")) {
-      return add(startOfDay(now), { weeks: 1, hours: Number(hour), minutes: Number(minute) });
+
+    const normalizedTime = (timePart ?? "09:00")
+      .replace(/h/i, ":")
+      .replace(/\s+/g, "");
+    const [hourSource = "9", minuteSource = "0"] = normalizedTime
+      .split(":")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const hour = Number.parseInt(hourSource, 10);
+    const minute = Number.parseInt(minuteSource, 10);
+
+    const descriptorLower = descriptor.toLowerCase();
+
+    if (descriptorLower.includes("demain")) {
+      return new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        Number.isNaN(hour) ? 9 : hour,
+        Number.isNaN(minute) ? 0 : minute
+      );
     }
-    if (descriptor.toLowerCase().includes("dans 2 semaines")) {
-      return add(startOfDay(now), { weeks: 2, hours: Number(hour), minutes: Number(minute) });
+    if (descriptorLower.includes("la semaine prochaine")) {
+      return add(startOfDay(now), {
+        weeks: 1,
+        hours: Number.isNaN(hour) ? 9 : hour,
+        minutes: Number.isNaN(minute) ? 0 : minute,
+      });
     }
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(hour), Number(minute));
+    if (descriptorLower.includes("dans 2 semaines")) {
+      return add(startOfDay(now), {
+        weeks: 2,
+        hours: Number.isNaN(hour) ? 9 : hour,
+        minutes: Number.isNaN(minute) ? 0 : minute,
+      });
+    }
+
+    const dateMatch = descriptor.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (dateMatch) {
+      const [, dayStr, monthStr, yearStr] = dateMatch;
+      const day = Number.parseInt(dayStr ?? "1", 10);
+      const month = Number.parseInt(monthStr ?? "1", 10) - 1;
+      const yearBase = yearStr ? Number.parseInt(yearStr, 10) : now.getFullYear();
+      const year = yearStr && yearBase < 100 ? yearBase + 2000 : yearBase;
+      return new Date(
+        Number.isNaN(year) ? now.getFullYear() : year,
+        Number.isNaN(month) ? now.getMonth() : month,
+        Number.isNaN(day) ? now.getDate() : day,
+        Number.isNaN(hour) ? 9 : hour,
+        Number.isNaN(minute) ? 0 : minute
+      );
+    }
+
+    const parsedDescriptor = new Date(descriptor);
+    if (!Number.isNaN(parsedDescriptor.getTime())) {
+      parsedDescriptor.setHours(
+        Number.isNaN(hour) ? 9 : hour,
+        Number.isNaN(minute) ? 0 : minute,
+        0,
+        0
+      );
+      return parsedDescriptor;
+    }
+
+    return new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      Number.isNaN(hour) ? 9 : hour,
+      Number.isNaN(minute) ? 0 : minute
+    );
+  }
+
+  function resolveStartDate(entry: Suivi): Date {
+    if (entry.startAt) {
+      const parsed = new Date(entry.startAt);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    return convertDate(entry.date);
+  }
+
+  function resolveEndDate(entry: Suivi, fallbackStart: Date): Date {
+    if (entry.endAt) {
+      const parsed = new Date(entry.endAt);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    return add(fallbackStart, { hours: 1 });
   }
 
   const events = useMemo(
     () =>
       suivis.map((item) => {
-        const start = convertDate(item.date);
-        const end = add(start, { hours: 1 });
+        const start = resolveStartDate(item);
+        const end = resolveEndDate(item, start);
         return {
           id: item.id,
           title: item.titre,
           start,
           end,
           backgroundColor:
-            item.couleur === "vert" ? "#22c55e" : item.couleur === "violet" ? "#7D5AE0" : "#f97316",
+            item.couleur === "vert"
+              ? "#22c55e"
+              : item.couleur === "violet"
+              ? "#7D5AE0"
+              : "#f97316",
           borderColor: "transparent",
           textColor: "#ffffff",
           extendedProps: { type: item.type, statut: item.statut },
         };
       }),
-    []
+    [suivis]
   );
 
   function handleEventClick(arg: EventClickArg) {
+    const { type, statut } = arg.event.extendedProps as {
+      type?: string;
+      statut?: Suivi["statut"];
+    };
+
     setSelectedEvent({
       id: arg.event.id,
-      title: arg.event.title,
+      title: arg.event.title ?? "",
       start: arg.event.start ?? undefined,
       end: arg.event.end ?? undefined,
-      ...arg.event.extendedProps,
+      type,
+      statut,
     });
   }
 
@@ -89,7 +205,10 @@ export default function FollowupCalendar() {
               <h3 className="text-lg font-bold">{selectedEvent.title}</h3>
               <p className="text-sm text-gray-300">{selectedEvent.type}</p>
             </div>
-            <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-white">
+            <button
+              onClick={() => setSelectedEvent(null)}
+              className="text-gray-400 hover:text-white"
+            >
               ✕
             </button>
           </div>
@@ -104,7 +223,10 @@ export default function FollowupCalendar() {
             </p>
             <p className="mt-2">
               <strong>Statut : </strong>
-              <span className="inline-block px-2 py-0.5 rounded text-xs" style={{ background: "#222" }}>
+              <span
+                className="inline-block px-2 py-0.5 rounded text-xs"
+                style={{ background: "#222" }}
+              >
                 {selectedEvent.statut}
               </span>
             </p>
