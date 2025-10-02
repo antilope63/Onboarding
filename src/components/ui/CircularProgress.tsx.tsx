@@ -2,8 +2,6 @@
 "use client";
 import { nullBrand } from "@/lib/font";
 import { useId } from "react";
-// ⚠️ Garde ce chemin identique à ton projet (les accents peuvent poser souci selon la config)
-import { getPhaseStats, phases } from "@/app/Taches/data";
 
 type Props = {
   /** taille en px (diamètre) */
@@ -17,6 +15,14 @@ type Props = {
   to?: string;
   /** couleur du texte */
   labelColor?: string;
+  /** progression en pourcentage */
+  percent?: number;
+  /** nombre de tâches vérifiées */
+  done?: number;
+  /** nombre total de tâches */
+  total?: number;
+  /** numéro de phase à afficher */
+  phaseNumber?: number;
 };
 
 export function CircularProgress({
@@ -26,19 +32,21 @@ export function CircularProgress({
   from = "#8B5CF6",
   to = "#6D28D9",
   labelColor = "#E5E7EB",
+  percent = 0,
+  done = 0,
+  total = 0,
+  phaseNumber = 0,
 }: Props) {
   const id = useId();
 
-  // ---- Récup des stats depuis tes données ---------------------------------
-  const { activeIndex, done, total, percent } = getPhaseStats(phases);
-
-  // Numéro de phase à afficher au centre
-  const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
+  const clampedPercent = Math.min(100, Math.max(0, percent));
+  const displayPercent = Math.round(clampedPercent);
+  const phaseLabel = phaseNumber > 0 ? phaseNumber : "—";
 
   // ---- Géométrie du cercle -------------------------------------------------
   const r = (size - strokeWidth) / 2; // rayon utile
   const c = 2 * Math.PI * r; // circonférence
-  const dash = (percent / 100) * c; // portion peinte
+  const dash = (clampedPercent / 100) * c; // portion peinte
   const gap = c - dash; // portion restante
 
   return (
@@ -101,7 +109,7 @@ export function CircularProgress({
           lineHeight: 1, // supprime le leading
         }}
       >
-        <span className="block translate-y-[-1px]">{phaseNumber}</span>
+        <span className="block translate-y-[-1px]">{phaseLabel}</span>
       </div>
 
       {/* Pourcentage en bas, petit */}
@@ -109,7 +117,7 @@ export function CircularProgress({
         className="absolute left-1/2 -translate-x-1/2 bottom-8 text-xs font-medium select-none"
         style={{ color: "rgba(229,231,235,0.8)" }}
       >
-        {percent}% • {done}/{total}
+        {displayPercent}% • {done}/{total}
       </div>
     </div>
   );

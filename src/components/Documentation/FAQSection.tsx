@@ -7,9 +7,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { MessageCircleQuestionMark } from "lucide-react";
-import { FAQ_ITEMS } from "@/app/documentation/data";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FaqItem } from "@/types/documentation";
+import { listFaqItems } from "@/lib/supabase/services/documentation";
 
 export type FAQSectionProps = React.HTMLAttributes<HTMLDivElement> & {
   className?: string;
@@ -34,8 +35,39 @@ export default function FAQSection({
   ...rest
 }: FAQSectionProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [items, setItems] = useState<FaqItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [fadeTopPx, setFadeTopPx] = useState(0);
   const [fadeBottomPx, setFadeBottomPx] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const data = await listFaqItems();
+        if (!active) return;
+        setItems(data);
+        setError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("FAQSection: unable to load FAQ", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (scrollMode === "page") {
@@ -116,6 +148,13 @@ export default function FAQSection({
 
   const isContained = scrollMode === "contained";
 
+  const groupedItems = useMemo(() => {
+    return items.reduce<Record<string, FaqItem[]>>((acc, item) => {
+      (acc[item.category] ||= []).push(item);
+      return acc;
+    }, {});
+  }, [items]);
+
   return (
     <section
       className={cn(
@@ -159,37 +198,35 @@ export default function FAQSection({
         </div> */}
 
           <div className="mt-12 flex-1 min-h-0 pr-2">
-            {Object.entries(
-              FAQ_ITEMS.reduce<Record<string, typeof FAQ_ITEMS>>(
-                (acc, item) => {
-                  (acc[item.category] ||= []).push(item);
-                  return acc;
-                },
-                {}
-              )
-            ).map(([category, items]) => (
-              <section key={category} className="mb-16 p-4 rounded-lg">
-                <h3 className="text-white font-semibold text-4xl mb-2">
-                  {category}
-                </h3>
-                <Accordion type="single" collapsible className="w-full">
-                  {items.map((item) => (
-                    <AccordionItem
-                      key={item.id}
-                      value={item.id}
-                      className="js-faq-item"
-                    >
-                      <AccordionTrigger className="text-white/80 text-lg font-bold">
-                        {item.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-white/80 whitespace-pre-wrap">
-                        {item.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </section>
-            ))}
+            {error ? (
+              <p className="text-red-300">{error}</p>
+            ) : isLoading ? (
+              <p className="text-white/70">Chargement de la FAQ...</p>
+            ) : (
+              Object.entries(groupedItems).map(([category, categoryItems]) => (
+                <section key={category} className="mb-16 p-4 rounded-lg">
+                  <h3 className="text-white font-semibold text-4xl mb-2">
+                    {category}
+                  </h3>
+                  <Accordion type="single" collapsible className="w-full">
+                    {categoryItems.map((item) => (
+                      <AccordionItem
+                        key={item.id}
+                        value={item.id}
+                        className="js-faq-item"
+                      >
+                        <AccordionTrigger className="text-white/80 text-lg font-bold">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-white/80 whitespace-pre-wrap">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </section>
+              ))
+            )}
             <div className="h-24"></div>
           </div>
         </div>

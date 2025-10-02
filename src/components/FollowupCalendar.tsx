@@ -9,33 +9,14 @@ import frLocale from "@fullcalendar/core/locales/fr";
 import { useMemo, useState } from "react";
 import { add, startOfDay } from "date-fns";
 import { EventClickArg } from "@fullcalendar/core";
-import type { Suivi } from "@/app/Reunion/data";
+import type { FollowupMeeting } from "@/types/followup";
 
-type FollowupCalendarProps = {
-  suivis: Suivi[];
-};
-
-type CalendarEventDetails = {
-  id: string;
-  title: string;
-  start?: Date;
-  end?: Date;
-  type?: string;
-  statut?: Suivi["statut"];
-};
-
-export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventDetails | null>(
-    null
-  );
-
-  // Conversion des dates textuelles en Date quand aucune valeur précise n'est fournie.
-  function convertDate(label: string): Date {
-    const now = new Date();
-    const commaParts = label
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
+function convertDate(label: string): Date {
+  const now = new Date();
+  const commaParts = label
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
     let descriptor = commaParts[0] ?? label;
     let timePart = commaParts[1];
 
@@ -111,34 +92,52 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
       return parsedDescriptor;
     }
 
-    return new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      Number.isNaN(hour) ? 9 : hour,
-      Number.isNaN(minute) ? 0 : minute
-    );
-  }
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    Number.isNaN(hour) ? 9 : hour,
+    Number.isNaN(minute) ? 0 : minute
+  );
+}
 
-  function resolveStartDate(entry: Suivi): Date {
-    if (entry.startAt) {
-      const parsed = new Date(entry.startAt);
-      if (!Number.isNaN(parsed.getTime())) {
-        return parsed;
-      }
+function resolveStartDate(entry: FollowupMeeting): Date {
+  if (entry.startAt) {
+    const parsed = new Date(entry.startAt);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
     }
-    return convertDate(entry.date);
   }
+  return convertDate(entry.date);
+}
 
-  function resolveEndDate(entry: Suivi, fallbackStart: Date): Date {
-    if (entry.endAt) {
-      const parsed = new Date(entry.endAt);
-      if (!Number.isNaN(parsed.getTime())) {
-        return parsed;
-      }
+function resolveEndDate(entry: FollowupMeeting, fallbackStart: Date): Date {
+  if (entry.endAt) {
+    const parsed = new Date(entry.endAt);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
     }
-    return add(fallbackStart, { hours: 1 });
   }
+  return add(fallbackStart, { hours: 1 });
+}
+
+type FollowupCalendarProps = {
+  suivis: FollowupMeeting[];
+};
+
+type CalendarEventDetails = {
+  id: string;
+  title: string;
+  start?: Date;
+  end?: Date;
+  type?: string;
+  statut?: FollowupMeeting["statut"];
+};
+
+export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventDetails | null>(
+    null
+  );
 
   const events = useMemo(
     () =>
@@ -167,7 +166,7 @@ export default function FollowupCalendar({ suivis }: FollowupCalendarProps) {
   function handleEventClick(arg: EventClickArg) {
     const { type, statut } = arg.event.extendedProps as {
       type?: string;
-      statut?: Suivi["statut"];
+      statut?: FollowupMeeting["statut"];
     };
 
     setSelectedEvent({

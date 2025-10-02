@@ -5,7 +5,7 @@ import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
-import type { TaskStatus } from "../data"
+import type { TaskStatus } from "@/types/tasks"
 import { statusMeta } from "./status-meta"
 
 interface KanbanTask {

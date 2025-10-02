@@ -3,7 +3,7 @@
 import NavBar from "@/components/NavBar";
 import SessionCard from "@/components/Formation/SessionCard";
 import NoScroll from "@/components/NoScroll";
-import type { FormationSession } from "./data";
+import type { FormationSession } from "@/types/formation";
 import {
   useCallback,
   useEffect,
@@ -41,8 +41,15 @@ const DEFAULT_TIME_SLOTS = [
 ];
 
 export default function FormationPage() {
-  const { sessions: sessionList, addSession, updateSession, removeSession } =
-    useManagedSessions();
+  const {
+    sessions: sessionList,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+    refresh: refreshSessions,
+    addSession,
+    updateSession,
+    removeSession,
+  } = useManagedSessions();
   const baseLength = sessionList.length;
   const middleCycle = Math.floor(LOOP_MULTIPLIER / 2);
   const totalCards = baseLength * LOOP_MULTIPLIER;
@@ -52,8 +59,13 @@ export default function FormationPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const { scheduledSessions, scheduleSession, cancelSession } =
-    useFormationSchedule();
+  const {
+    scheduledSessions,
+    scheduleSession,
+    cancelSession,
+    isLoading: scheduleLoading,
+    error: scheduleError,
+  } = useFormationSchedule();
   const { role } = useAuth();
   const canManageSessions = role === "manager";
 
@@ -126,7 +138,7 @@ export default function FormationPage() {
   }, []);
 
   const handleSessionSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!sessionForm.title.trim() || !sessionForm.subtitle.trim()) {
         return;
@@ -145,24 +157,31 @@ export default function FormationPage() {
         done: sessionForm.done,
       };
 
-      if (editingSessionId) {
-        updateSession(editingSessionId, payload);
-      } else {
-        addSession(payload);
+      try {
+        if (editingSessionId) {
+          await updateSession(editingSessionId, payload);
+        } else {
+          await addSession(payload);
+        }
+        closeSessionDialog();
+      } catch (error) {
+        console.error("FormationPage: unable to save session", error);
       }
-
-      closeSessionDialog();
     },
     [addSession, closeSessionDialog, editingSessionId, sessionForm, updateSession]
   );
 
   const handleSessionDelete = useCallback(
-    (id: string, title: string) => {
+    async (id: string, title: string) => {
       if (!window.confirm(`Supprimer la formation "${title}" ?`)) {
         return;
       }
-      removeSession(id);
-      cancelSession(id);
+      try {
+        await removeSession(id);
+        await cancelSession(id);
+      } catch (error) {
+        console.error("FormationPage: unable to delete session", error);
+      }
     },
     [cancelSession, removeSession]
   );
@@ -396,16 +415,20 @@ export default function FormationPage() {
     setIsDialogOpen(true);
   };
 
-  const handleConfirmReservation = () => {
+  const handleConfirmReservation = useCallback(async () => {
     if (!selectedSlot || !selectedDate || !currentSession) return;
 
-    scheduleSession(
-      currentSession.id,
-      selectedSlot,
-      selectedDate.toISOString()
-    );
-    setIsDialogOpen(false);
-  };
+    try {
+      await scheduleSession(
+        currentSession.id,
+        selectedSlot,
+        selectedDate.toISOString()
+      );
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("FormationPage: unable to schedule session", error);
+    }
+  }, [currentSession, scheduleSession, selectedDate, selectedSlot]);
 
   const handleKeyDown = (
     event: KeyboardEvent<HTMLDivElement>,
@@ -416,6 +439,34 @@ export default function FormationPage() {
       activateCard(loopIndex);
     }
   };
+
+  if (sessionsLoading) {
+    return (
+      <section className="relative flex min-h-screen items-center justify-center bg-noir text-white">
+        <NavBar classname="absolute top-0 left-0" />
+        <NoScroll />
+        <p className="text-lg text-white/70">Chargement des formations...</p>
+      </section>
+    );
+  }
+
+  if (sessionsError) {
+    return (
+      <section className="relative flex min-h-screen flex-col items-center justify-center gap-4 bg-noir text-white">
+        <NavBar classname="absolute top-0 left-0" />
+        <NoScroll />
+        <h1 className="text-2xl font-semibold">Impossible de charger les formations</h1>
+        <p className="text-white/70">{sessionsError}</p>
+        <Button
+          type="button"
+          onClick={() => void refreshSessions()}
+          className="rounded-full bg-violet_fonce_1 px-5 py-2 text-sm font-semibold text-white hover:bg-violet"
+        >
+          Réessayer
+        </Button>
+      </section>
+    );
+  }
 
   if (baseLength === 0) {
     return (
@@ -468,6 +519,11 @@ export default function FormationPage() {
             Ajouter une formation
           </Button>
         )}
+        {scheduleError && (
+          <p className="mt-3 text-sm text-red-300">
+            {scheduleError}
+          </p>
+        )}
       </div>
 
       <div className="w-full">
@@ -517,7 +573,7 @@ export default function FormationPage() {
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
-                        handleSessionDelete(session.id, session.title);
+                        void handleSessionDelete(session.id, session.title);
                       }}
                       className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 backdrop-blur transition hover:bg-red-500/20"
                     >
@@ -671,8 +727,8 @@ export default function FormationPage() {
             </DialogClose>
             <Button
               className="bg-violet_fonce_1 hover:bg-violet cursor-pointer"
-              disabled={!selectedSlot || !selectedDate}
-              onClick={handleConfirmReservation}
+              disabled={scheduleLoading || !selectedSlot || !selectedDate}
+              onClick={() => void handleConfirmReservation()}
             >
               Valider ce créneau
             </Button>
@@ -702,9 +758,13 @@ export default function FormationPage() {
             </DialogClose>
             <Button
               className="bg-red-600 hover:bg-red-700 cursor-pointer"
-              onClick={() => {
+              onClick={async () => {
                 if (currentSession) {
-                  cancelSession(currentSession.id);
+                  try {
+                    await cancelSession(currentSession.id);
+                  } catch (error) {
+                    console.error("FormationPage: unable to cancel session", error);
+                  }
                 }
                 setIsCancelDialogOpen(false);
               }}

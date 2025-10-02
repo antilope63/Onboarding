@@ -1,10 +1,14 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
-import { prochainRdvDate } from "@/app/Reunion/data";
-import { Task, getPhaseStats, phases } from "@/app/Taches/data";
+import { fetchFollowupHighlight } from "@/lib/supabase/services/followups";
+import { listPhasesWithTasks } from "@/lib/supabase/services/tasks";
+import { listTeamMembers } from "@/lib/supabase/services/team";
+import type { Phase, Task } from "@/types/tasks";
+import type { PeopleCardMember } from "@/types/people";
+import type { FollowupHighlight } from "@/types/followup";
 import {
   BentoCard,
   BentoCardProps,
@@ -27,25 +31,170 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatedBeamBento } from "./animated_beam_bento";
-import { TEAM_MEMBERS } from "./people.data";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+function computePhaseStats(phases: Phase[]) {
+  if (phases.length === 0) {
+    return {
+      activeIndex: null as number | null,
+      done: 0,
+      total: 0,
+      percent: 0,
+    };
+  }
+
+  const activeIndex = phases.findIndex((phase) =>
+    phase.tasks.some((task) => task.status !== "verified")
+  );
+
+  if (activeIndex === -1) {
+    const totals = phases.reduce(
+      (acc, phase) => {
+        const verifiedCount = phase.tasks.filter(
+          (task) => task.status === "verified"
+        ).length;
+        return {
+          done: acc.done + verifiedCount,
+          total: acc.total + phase.tasks.length,
+        };
+      },
+      { done: 0, total: 0 }
+    );
+
+    return {
+      activeIndex: null as number | null,
+      done: totals.done,
+      total: totals.total,
+      percent: totals.total === 0 ? 0 : 100,
+    };
+  }
+
+  const activePhase = phases[activeIndex];
+  const total = activePhase.tasks.length;
+  const done = activePhase.tasks.filter((task) => task.status === "verified").length;
+  const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+  return { activeIndex, done, total, percent };
+}
 
 export default function Bento_Doug() {
-  const { activeIndex } = getPhaseStats(phases);
-  const activePhase = activeIndex !== null ? phases[activeIndex] : null;
-
   const { role } = useAuth();
   const isManager = role === "manager";
   const isRh = role === "rh";
   const canManagePeople = isManager || isRh;
 
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
-    TEAM_MEMBERS[0]?.id ?? null
-  );
+  const [phasesState, setPhasesState] = useState<Phase[]>([]);
+  const phaseStats = useMemo(() => computePhaseStats(phasesState), [phasesState]);
+  const activePhase =
+    phaseStats.activeIndex !== null
+      ? phasesState[phaseStats.activeIndex] ?? null
+      : null;
 
+  const [teamMembers, setTeamMembers] = useState<PeopleCardMember[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const selectedMember = useMemo(() => {
-    if (!selectedMemberId) return TEAM_MEMBERS[0] ?? null;
-    return TEAM_MEMBERS.find((member) => member.id === selectedMemberId) ?? null;
-  }, [selectedMemberId]);
+    if (!selectedMemberId) return teamMembers[0] ?? null;
+    return teamMembers.find((member) => member.id === selectedMemberId) ?? null;
+  }, [selectedMemberId, teamMembers]);
+
+  const [highlight, setHighlight] = useState<FollowupHighlight | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const loadData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    try {
+      const [phaseRows, memberRows, highlightRow] = await Promise.all([
+        listPhasesWithTasks(),
+        listTeamMembers(),
+        fetchFollowupHighlight(),
+      ]);
+
+      if (!isMountedRef.current) return;
+
+      setPhasesState(phaseRows);
+      setTeamMembers(memberRows);
+      setHighlight(highlightRow ?? null);
+      setError(null);
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      console.error("BentoGrid: unable to load data", err);
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    const channel = supabase
+      .channel("bento-grid-updates")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tasks" },
+        () => {
+          void loadData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "followup_meetings" },
+        () => {
+          void loadData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "followup_highlights" },
+        () => {
+          void loadData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "team_members" },
+        () => {
+          void loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [loadData]);
+
+  useEffect(() => {
+    if (teamMembers.length === 0) {
+      setSelectedMemberId(null);
+      return;
+    }
+
+    if (!selectedMemberId || !teamMembers.some((member) => member.id === selectedMemberId)) {
+      setSelectedMemberId(teamMembers[0].id);
+    }
+  }, [selectedMemberId, teamMembers]);
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center bg-[#04061D] text-white">
+        {error}
+      </div>
+    );
+  }
 
   const Iconcolor = "text-white/90";
   const namecolor = "text-white/90";
@@ -88,13 +237,27 @@ export default function Bento_Doug() {
     },
   ];
 
+  const phaseCount = phasesState.length;
+  const currentPhaseNumber =
+    phaseStats.activeIndex !== null
+      ? phaseStats.activeIndex + 1
+      : phaseCount > 0
+      ? phaseCount
+      : 0;
+  const highlightDateLabel = highlight?.date ?? "À définir";
+  const highlightTitle = highlight?.titre ?? "Aucune réunion planifiée";
+  const highlightType = highlight?.type ?? "";
+  const highlightStatus = highlight?.statut ?? "Programmé";
+
   const features: BentoCardProps[] = [
     {
       Icon: ListBulletIcon,
       name: "Tâches",
       description: activePhase
-        ? `Vous êtes à la phase ${activePhase.name} `
-        : "Toutes les phases terminées 🎉",
+        ? `Phase ${currentPhaseNumber}/${phaseCount}: ${activePhase.name}`
+        : phaseCount > 0
+        ? "Toutes les phases terminées 🎉"
+        : "Configure tes premières phases",
       href: "/Taches",
       cta: "Go aux tâches",
       iconColor: Iconcolor,
@@ -107,6 +270,14 @@ export default function Bento_Doug() {
         <div className="absolute inset-0 p-6">
           {activePhase ? (
             <div className="flex h-full w-full flex-col">
+              <div className="flex items-center justify-between text-xs text-white/60">
+                <span>
+                  {phaseStats.total > 0
+                    ? `${phaseStats.done}/${phaseStats.total} vérifiées`
+                    : "Aucune tâche dans cette phase"}
+                </span>
+                {phaseStats.total > 0 && <span>{phaseStats.percent}%</span>}
+              </div>
               <div className="text-xs text-white/60 mb-2">
                 {activePhase.name}
               </div>
@@ -141,9 +312,8 @@ export default function Bento_Doug() {
                       )}
                       title={STATUS_LABEL[t.status]}
                     >
-<Link href="/Formulaire">
-  {STATUS_LABEL[t.status]}
-</Link>                    </span>
+                      {STATUS_LABEL[t.status]}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -186,9 +356,11 @@ export default function Bento_Doug() {
     {
       Icon: CalendarIcon,
       name: "Réunion",
-      description: "Votre prochaine Réunion est " + prochainRdvDate.date,
+      description: highlight
+        ? `Prochaine réunion (${highlightStatus}): ${highlightTitle}${highlightType ? ` (${highlightType})` : ""} – ${highlightDateLabel}`
+        : "Aucune réunion planifiée",
       href: "/Reunion",
-      cta: "Aller au Réunion",
+      cta: highlight ? "Voir les suivis" : "Programmer un suivi",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -286,93 +458,103 @@ export default function Bento_Doug() {
       "rounded-2xl lg:col-span-3 lg:row-span-2 border border-white/7",
     background: (
       <div className="absolute inset-0 flex flex-col gap-4 bg-gradient-to-br from-[#1B1B37] via-[#1F2245] to-[#25284F] p-6 text-white pointer-events-auto">
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/15 bg-white/10 p-4">
-          {selectedMember?.avatar ? (
-            <Image
-              src={selectedMember.avatar}
-              alt={selectedMember.name}
-              width={72}
-              height={72}
-              className="h-16 w-16 rounded-2xl object-cover"
-            />
-          ) : (
-            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/10 text-lg font-semibold text-white/60">
-              {selectedMember?.name
-                ?.split(" ")
-                .map((chunk) => chunk[0])
-                .join("")
-                .slice(0, 2) ?? "--"}
-            </div>
-          )}
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
-              Profil sélectionné
-            </span>
-            <p className="truncate text-xl font-semibold">
-              {selectedMember?.name ?? "Choisis un collaborateur"}
-            </p>
-            <p className="truncate text-sm text-white/70">
-              {selectedMember
-                ? `${selectedMember.role} · ${selectedMember.team}`
-                : "Sélectionne une personne dans la liste"}
-            </p>
-          </div>
-          {selectedMember && (
-            <div className="flex flex-col items-end gap-1 text-right text-xs text-white/70">
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase">
-                {selectedMember.status ?? "Actif"}
+        {selectedMember ? (
+          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/15 bg-white/10 p-4">
+            {selectedMember.avatar ? (
+              <Image
+                src={selectedMember.avatar}
+                alt={selectedMember.name}
+                width={72}
+                height={72}
+                className="h-16 w-16 rounded-2xl object-cover"
+              />
+            ) : (
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/10 text-lg font-semibold text-white/60">
+                {selectedMember.name
+                  .split(" ")
+                  .map((chunk) => chunk[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+                Profil sélectionné
               </span>
-              <span className="truncate text-white/60">{selectedMember.email}</span>
+              <p className="truncate text-xl font-semibold">
+                {selectedMember.name}
+              </p>
+              <p className="truncate text-sm text-white/70">
+                {selectedMember.role} · {selectedMember.team}
+              </p>
+              <span className="truncate text-xs text-white/60">
+                {selectedMember.email}
+              </span>
             </div>
-          )}
-        </div>
+            {selectedMember.status && (
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase">
+                {selectedMember.status}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-sm text-white/70">
+            Aucun membre sélectionné pour le moment.
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-          {TEAM_MEMBERS.map((member) => {
-            const isActive = member.id === selectedMember?.id
-            return (
-              <button
-                key={member.id}
-                type="button"
-                onClick={() => setSelectedMemberId(member.id)}
-                className={cn(
-                  "flex w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left transition",
-                  isActive
-                    ? "border-white/40 bg-white/15 text-white"
-                    : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white"
-                )}
-              >
-                {member.avatar ? (
-                  <Image
-                    src={member.avatar}
-                    alt={member.name}
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 rounded-2xl object-cover"
-                  />
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-sm font-semibold">
-                    {member.name
-                      .split(" ")
-                      .map((chunk) => chunk[0])
-                      .join("")
-                      .slice(0, 2)}
+          {teamMembers.length > 0 ? (
+            teamMembers.map((member) => {
+              const isActive = member.id === selectedMember?.id
+              return (
+                <button
+                  key={member.id}
+                  type="button"
+                  onClick={() => setSelectedMemberId(member.id)}
+                  className={cn(
+                    "flex w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left transition",
+                    isActive
+                      ? "border-white/40 bg-white/15 text-white"
+                      : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  {member.avatar ? (
+                    <Image
+                      src={member.avatar}
+                      alt={member.name}
+                      width={44}
+                      height={44}
+                      className="h-11 w-11 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-sm font-semibold">
+                      {member.name
+                        .split(" ")
+                        .map((chunk) => chunk[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                  )}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold">
+                      {member.name}
+                    </span>
+                    <span className="truncate text-xs text-white/60">
+                      {member.role}
+                    </span>
                   </div>
-                )}
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold">
-                    {member.name}
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                    {member.status ?? "Actif"}
                   </span>
-                  <span className="truncate text-xs text-white/60">
-                    {member.role}
-                  </span>
-                </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
-                  {member.status ?? "Actif"}
-                </span>
-              </button>
-            )
-          })}
+                </button>
+              )
+            })
+          ) : (
+            <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm text-white/60">
+              Ajoute des membres pour les afficher ici.
+            </p>
+          )}
         </div>
       </div>
     ),
@@ -465,6 +647,10 @@ export default function Bento_Doug() {
           from="#A855F7"
           to="#6366F1"
           trackColor="#02061B"
+          percent={phaseStats.percent}
+          done={phaseStats.done}
+          total={phaseStats.total}
+          phaseNumber={currentPhaseNumber}
         />
         <div className="w-[calc(2*var(--r))] h-[calc(2*var(--r))] rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] opacity-90" />
       </div>
