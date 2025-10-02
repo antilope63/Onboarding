@@ -1,6 +1,148 @@
 // app/followup/page.tsx
 "use client";
 
+
+import { FormEvent, useMemo, useState } from "react";
+import { prochainRdv, suivis, type Suivi } from "./data";
+import { CalendarClock, Users, Briefcase, Plus, Edit, Trash2 } from "lucide-react";
+import NavBar from "@/components/NavBar";
+import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
+import { useManagedSessions } from "@/hooks/useManagedSessions";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
+export default function FollowupPage() {
+  const { scheduledSessions } = useFormationSchedule();
+  const { sessions: sessionList } = useManagedSessions();
+  const { role } = useAuth();
+  const canManageMeetings = role === "manager" || role === "rh";
+
+  const [meetings, setMeetings] = useState<Suivi[]>(suivis);
+  const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
+  const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null);
+  const [meetingForm, setMeetingForm] = useState({
+    titre: "",
+    type: "",
+    date: "",
+    statut: "Programmé" as Suivi["statut"],
+    couleur: "violet" as Suivi["couleur"],
+  });
+
+  const manualIds = useMemo(
+    () => new Set(meetings.map((meeting) => meeting.id)),
+    [meetings]
+  );
+
+  const resetMeetingForm = () => {
+    setMeetingForm({
+      titre: "",
+      type: "",
+      date: "",
+      statut: "Programmé",
+      couleur: "violet",
+    });
+    setEditingMeetingId(null);
+  };
+
+  const openMeetingDialog = (meeting?: Suivi) => {
+    if (meeting) {
+      setMeetingForm({
+        titre: meeting.titre,
+        type: meeting.type,
+        date: meeting.date,
+        statut: meeting.statut,
+        couleur: meeting.couleur,
+      });
+      setEditingMeetingId(meeting.id);
+    } else {
+      resetMeetingForm();
+    }
+    setIsMeetingDialogOpen(true);
+  };
+
+  const closeMeetingDialog = () => {
+    setIsMeetingDialogOpen(false);
+    resetMeetingForm();
+  };
+
+  const handleMeetingSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!meetingForm.titre.trim() || !meetingForm.date.trim()) {
+      return;
+    }
+
+    setMeetings((previous) => {
+      if (editingMeetingId) {
+        return previous.map((meeting) =>
+          meeting.id === editingMeetingId
+            ? { id: editingMeetingId, ...meetingForm }
+            : meeting
+        );
+      }
+
+      const newId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `meeting-${Date.now()}`;
+
+      return [...previous, { id: newId, ...meetingForm }];
+    });
+
+    closeMeetingDialog();
+  };
+
+  const handleMeetingDelete = (meeting: Suivi) => {
+    if (!window.confirm(`Supprimer la réunion "${meeting.titre}" ?`)) {
+      return;
+    }
+    setMeetings((previous) => previous.filter((item) => item.id !== meeting.id));
+  };
+
+  const scheduledSuivis = useMemo(() => {
+    return scheduledSessions
+      .map((item) => {
+        const session = sessionList.find(
+          (current) => current.id === item.sessionId
+        );
+        if (!session) return null;
+
+        const plannedDate = new Date(item.date);
+        if (Number.isNaN(plannedDate.getTime())) return null;
+
+        const dateLabel = plannedDate.toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+        });
+
+        const suivi: Suivi = {
+          id: `formation-${session.id}`,
+          titre: session.title,
+          type: session.subtitle,
+          date: `${dateLabel} · ${item.slot}`,
+          statut: "Programmé",
+          couleur: "violet",
+        };
+        return { order: plannedDate.getTime(), suivi };
+      })
+      .filter(
+        (value): value is { order: number; suivi: Suivi } => value !== null
+      )
+      .sort((a, b) => a.order - b.order)
+      .map((entry) => entry.suivi);
+  }, [scheduledSessions, sessionList]);
+
+  const allSuivis = [...scheduledSuivis, ...meetings];
+=======
 import { useState, useRef, useEffect } from "react";
 import { prochainRdv, suivis } from "./data";
 import { CalendarClock, Users, Briefcase } from "lucide-react";
@@ -63,6 +205,49 @@ export default function FollowupPage() {
         </div>
 
         <div className="flex flex-col gap-5 p-6 rounded-lg bg-[#1D1E3B] border border-[#22254C] shadow-lg">
+
+          <h2 className="text-2xl font-bold tracking-tight text-white">
+            Suivis à venir
+          </h2>
+          {canManageMeetings && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                onClick={() => openMeetingDialog()}
+                className="inline-flex items-center gap-2 rounded-full bg-violet_fonce_1 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet"
+              >
+                <Plus className="h-4 w-4" />
+                Programmer un suivi
+              </Button>
+            </div>
+          )}
+
+          {allSuivis.map((item) => (
+            <div
+              key={item.id}
+              className="relative flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors"
+            >
+              {canManageMeetings && manualIds.has(item.id) && (
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openMeetingDialog(item)}
+                    className="flex items-center gap-1 rounded-full border border-white/25 bg-black/30 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMeetingDelete(item)}
+                    className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-900/40 px-3 py-1 text-xs text-red-200 transition hover:bg-red-500/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer
+                  </button>
+                </div>
+              )}
+              {/* Icône dynamique */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold tracking-tight text-white">Suivis à venir</h2>
 
@@ -126,6 +311,139 @@ export default function FollowupPage() {
           )}
         </div>
       </div>
+
+      {canManageMeetings && (
+        <Dialog
+          open={isMeetingDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) closeMeetingDialog();
+          }}
+        >
+          <DialogContent className="max-w-lg border-white/10 bg-[#1D1E3B] text-white">
+            <DialogHeader>
+              <DialogTitle>
+                {editingMeetingId
+                  ? "Modifier une réunion"
+                  : "Programmer une réunion"}
+              </DialogTitle>
+              <DialogDescription className="text-white/70">
+                Planifie un suivi personnalisé pour accompagner l&apos;arrivée de
+                ton talent.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleMeetingSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                  Titre
+                </label>
+                <Input
+                  value={meetingForm.titre}
+                  onChange={(event) =>
+                    setMeetingForm((prev) => ({
+                      ...prev,
+                      titre: event.target.value,
+                    }))
+                  }
+                  placeholder="Point Manager"
+                  className="border-white/20 bg-white/10 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                  Type
+                </label>
+                <Input
+                  value={meetingForm.type}
+                  onChange={(event) =>
+                    setMeetingForm((prev) => ({
+                      ...prev,
+                      type: event.target.value,
+                    }))
+                  }
+                  placeholder="RH, Manager, Projet..."
+                  className="border-white/20 bg-white/10 text-white"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                  Date / heure
+                </label>
+                <Input
+                  value={meetingForm.date}
+                  onChange={(event) =>
+                    setMeetingForm((prev) => ({
+                      ...prev,
+                      date: event.target.value,
+                    }))
+                  }
+                  placeholder="Ex: 12/04 · 14h00"
+                  className="border-white/20 bg-white/10 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                    Statut
+                  </label>
+                  <select
+                    value={meetingForm.statut}
+                    onChange={(event) =>
+                      setMeetingForm((prev) => ({
+                        ...prev,
+                        statut: event.target.value as Suivi["statut"],
+                      }))
+                    }
+                    className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
+                  >
+                    <option value="Obligatoire">Obligatoire</option>
+                    <option value="Optionnel">Optionnel</option>
+                    <option value="Programmé">Programmé</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                    Couleur
+                  </label>
+                  <select
+                    value={meetingForm.couleur}
+                    onChange={(event) =>
+                      setMeetingForm((prev) => ({
+                        ...prev,
+                        couleur: event.target.value as Suivi["couleur"],
+                      }))
+                    }
+                    className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet_fonce_1"
+                  >
+                    <option value="vert">Vert</option>
+                    <option value="violet">Violet</option>
+                    <option value="orange">Orange</option>
+                    <option value="gris">Gris</option>
+                  </select>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeMeetingDialog}
+                  className="border-white/30 text-white hover:bg-white/10"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-violet_fonce_1 hover:bg-violet"
+                >
+                  {editingMeetingId ? "Enregistrer" : "Programmer"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </main>
   );
 }
