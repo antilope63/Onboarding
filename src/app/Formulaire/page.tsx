@@ -1,21 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Gamepad2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function FormulairePage() {
   const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitted(true);
+
+    // Redirection après 2 secondes
+    setTimeout(() => {
+      router.push("/Recompense");
+    }, 2000);
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#04061D] font-display text-white">
-      
-
-      {/* Main */}
       <main className="flex flex-1 items-center justify-center p-4 sm:p-6 md:p-8">
         <div className="w-full max-w-2xl space-y-8 rounded-xl bg-[#1D1E3B]/60 p-6 shadow-2xl shadow-[#7D5AE0]/20 sm:p-8">
           {!submitted ? (
@@ -33,7 +36,7 @@ export default function FormulairePage() {
                   <h3 className="text-lg font-semibold">
                     1. Comment évaluerais-tu ton expérience globale d&apos;onboarding ?
                   </h3>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 justify-center">
                     {["Très mauvaise", "Mauvaise", "Neutre", "Bonne", "Très bonne"].map(
                       (label) => (
                         <label
@@ -44,6 +47,7 @@ export default function FormulairePage() {
                           <input
                             type="radio"
                             name="experience"
+                            required
                             className="absolute h-full w-full cursor-pointer opacity-0"
                           />
                         </label>
@@ -59,9 +63,9 @@ export default function FormulairePage() {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      "Tutoriels interactifs",
+                      "Tâches",
                       "FAQ et documentation",
-                      "Support client",
+                      "Follow up",
                       "Autres (préciser)",
                     ].map((option) => (
                       <label
@@ -79,23 +83,24 @@ export default function FormulairePage() {
                   <textarea
                     className="mt-2 w-full resize-none rounded-lg border-2 border-gray-600 bg-[#22254C]/50 p-3 text-gray-200 placeholder-gray-400 focus:border-[#7D5AE0] focus:ring-[#7D5AE0]/50"
                     placeholder="Préciser"
-                  ></textarea>
+                  />
                 </div>
 
                 {/* Q3 */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">
-                    3. Sur une échelle de 1 à 5, à quel point l&apos;onboarding t&apos;a-t-il préparé à utiliser PixelPlay ?
+                    3. Sur une échelle de 1 à 5, qu&apos;as-tu pensé de l&apos;outil d&apos;onboarding de PixelPlay ?
                   </h3>
                   <div className="flex items-center justify-between text-gray-300">
-                    <span>Pas du tout</span>
+                    <span>Mauvais</span>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((n) => (
                         <input
                           key={n}
                           type="radio"
                           name="preparedness"
-                          className="h-6 w-6 cursor-pointer rounded-full border-2 border-gray-500 checked:border-[#7D5AE0] checked:bg-[#7D5AE0]"
+                          required
+                          className="h-6 w-6 cursor-pointer rounded-full border-2 checked:border-[#7D5AE0] checked:bg-[#7D5AE0]"
                         />
                       ))}
                     </div>
@@ -106,12 +111,13 @@ export default function FormulairePage() {
                 {/* Q4 */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">
-                    4. As-tu rencontré des problèmes techniques ?
+                    4. As-tu rencontré des problèmes techniques ou des difficultés lors de l&apos;onboarding ?
                   </h3>
                   <textarea
                     className="w-full resize-none rounded-lg border-2 border-gray-600 bg-[#22254C]/50 p-3 text-gray-200 placeholder-gray-400 focus:border-[#7D5AE0] focus:ring-[#7D5AE0]/50"
                     placeholder="Si oui, décris les problèmes rencontrés..."
-                  ></textarea>
+                  required
+                  />
                 </div>
 
                 {/* Submit */}
@@ -127,8 +133,8 @@ export default function FormulairePage() {
             </>
           ) : (
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-green-500">Succès Débloqué!</h2>
-              <p className="text-gray-300">Merci pour ton feedback, PixelPlayer !</p>
+              <h2 className="text-2xl font-bold text-green-500">Formulaire envoyé avec succès !</h2>
+              <p className="text-gray-300">Redirection vers la récompense...</p>
             </div>
           )}
         </div>
