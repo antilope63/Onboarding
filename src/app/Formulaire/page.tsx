@@ -18,7 +18,7 @@ export default function FormulairePage() {
     // Redirection après 3 secondes
     setTimeout(() => {
       router.push("/Recompense");
-    }, 3000);
+    }, 2500);
   };
 
   return (
