@@ -19,6 +19,7 @@ export type FAQSectionProps = React.HTMLAttributes<HTMLDivElement> & {
   perspective?: boolean;
   perspectiveScaleMin?: number; // 0-1, ex: 0.96
   perspectiveZone?: number; // px, ex: 140
+  scrollMode?: "contained" | "page";
 };
 
 export default function FAQSection({
@@ -29,6 +30,7 @@ export default function FAQSection({
   perspective = true,
   perspectiveScaleMin = 0.96,
   perspectiveZone = 140,
+  scrollMode = "contained",
   ...rest
 }: FAQSectionProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -36,6 +38,9 @@ export default function FAQSection({
   const [fadeBottomPx, setFadeBottomPx] = useState(0);
 
   useEffect(() => {
+    if (scrollMode === "page") {
+      return;
+    }
     const el = containerRef.current;
     if (!el) return;
 
@@ -87,7 +92,14 @@ export default function FAQSection({
       el.removeEventListener("scroll", updateFades as EventListener);
       window.removeEventListener("resize", updateFades);
     };
-  }, [fadeTop, fadeBottom, perspective, perspectiveScaleMin, perspectiveZone]);
+  }, [
+    fadeTop,
+    fadeBottom,
+    perspective,
+    perspectiveScaleMin,
+    perspectiveZone,
+    scrollMode,
+  ]);
 
   const topSoft = Math.max(0, Math.round(fadeTopPx * 0.6));
   const bottomSoft = Math.max(0, Math.round(fadeBottomPx * 0.6));
@@ -102,17 +114,28 @@ export default function FAQSection({
           rgba(0,0,0,0) 100%)`
       : `linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,1) ${fadeTopPx}px, rgba(0,0,0,1) calc(100% - ${fadeBottomPx}px), rgba(0,0,0,0) 100%)`;
 
+  const isContained = scrollMode === "contained";
+
   return (
     <section
-      className={cn("relative flex flex-col w-full h-[700px]", className)}
+      className={cn(
+        "relative flex w-full flex-col",
+        isContained ? "h-[700px]" : "h-auto",
+        className
+      )}
       {...rest}
     >
       <div
         ref={containerRef}
-        className="flex-1 min-h-0 overflow-y-auto"
-        style={{ WebkitMaskImage: maskImage, maskImage }}
+        className={cn(
+          "flex-1",
+          isContained ? "min-h-0 overflow-y-auto" : "min-h-fit overflow-visible"
+        )}
+        style={
+          isContained ? { WebkitMaskImage: maskImage, maskImage } : undefined
+        }
       >
-        <div className="pt-65">
+        <div className="">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-4">
               <MessageCircleQuestionMark className="w-8 h-8 text-white" />

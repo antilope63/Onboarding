@@ -4,18 +4,35 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrgNode } from "@/types/org";
+import Image from "next/image";
+import type { RawNodeDatum as D3RawNodeDatum } from "react-d3-tree";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
-type RawNodeDatum = {
-  name: string;
-  attributes?: Record<string, string | number | boolean>;
-  children?: RawNodeDatum[];
-};
+/**
+ * Construit un index id -> OrgNode pour retrouver le nœud d’origine au clic,
+ * sans violer le type de `attributes`.
+ */
+function buildIndex(root: OrgNode): Map<string, OrgNode> {
+  const map = new Map<string, OrgNode>();
+  const walk = (n: OrgNode) => {
+    map.set(n.id, n);
+    (n.children ?? []).forEach(walk);
+  };
+  walk(root);
+  return map;
+}
 
-function toRaw(node: OrgNode): RawNodeDatum {
+type Raw = D3RawNodeDatum;
+
+/**
+ * Convertit OrgNode -> RawNodeDatum pour react-d3-tree
+ * en ne mettant dans `attributes` que des types primitifs.
+ */
+function toRaw(node: OrgNode): Raw {
   const baseChildren = (node.children ?? []).map(toRaw);
-  const syntheticTeamLeaf: RawNodeDatum[] =
+
+  const syntheticTeamLeaf: Raw[] =
     typeof node.count === "number"
       ? [
           {
@@ -25,12 +42,15 @@ function toRaw(node: OrgNode): RawNodeDatum {
         ]
       : [];
 
+  const attrs: Record<string, string | number | boolean> = {
+    Id: node.id,
+    Rôle: node.title,
+    Image: node.image ?? "",
+  };
+
   return {
     name: node.name,
-    attributes: {
-      Rôle: node.title,
-      Image: node.image ?? "",
-    },
+    attributes: attrs,
     children: [...baseChildren, ...syntheticTeamLeaf],
   };
 }
@@ -39,9 +59,10 @@ type Props = {
   data: OrgNode;
   width?: number;
   height?: number;
+  onSelectNode?: (node: OrgNode) => void;
 };
 
-export default function OrgD3Tree({ data }: Props) {
+export default function OrgD3Tree({ data, onSelectNode }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [translate, setTranslate] = useState<{ x: number; y: number }>({
@@ -55,24 +76,29 @@ export default function OrgD3Tree({ data }: Props) {
     setTranslate({ x: rect.width / 2, y: 100 });
   }, []);
 
-  const treeData = useMemo(() => toRaw(data), [data]);
+  const { treeData, indexById } = useMemo(() => {
+    return { treeData: toRaw(data), indexById: buildIndex(data) };
+  }, [data]);
 
   return (
-    <div ref={wrapperRef} className="w-full h-[80vh]">
+    <section ref={wrapperRef} className="w-full h-screen">
       <Tree
-        data={treeData}
+        data={treeData as unknown as Raw} // sûr: notre structure respecte Raw
         orientation="vertical"
-        pathFunc="step" // "diagonal" ou "elbow" ou "straight" ou "step"
-        zoomable={false}
-        draggable={false}
+        pathFunc="step" // "diagonal" | "elbow" | "straight" | "step"
+        zoomable
+        draggable
+        hasInteractiveNodes
+        scaleExtent={{ min: 0.5, max: 2.5 }}
         translate={translate}
         collapsible={false}
         nodeSize={{ x: 220, y: 140 }}
         separation={{ siblings: 0.7, nonSiblings: 0.9 }}
-        renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
+        renderCustomNodeElement={({ nodeDatum }) => {
           const type = nodeDatum.attributes?.["type"] as string | undefined;
-          const role = nodeDatum.attributes?.["Rôle"];
+          const role = nodeDatum.attributes?.["Rôle"] as string | undefined;
           const img = (nodeDatum.attributes?.["Image"] as string) || "";
+          const id = nodeDatum.attributes?.["Id"] as string | undefined;
 
           if (type === "team-count") {
             return (
@@ -87,16 +113,26 @@ export default function OrgD3Tree({ data }: Props) {
           }
 
           return (
-            <g onClick={toggleNode} cursor="default">
+            <g
+              onClick={() => {
+                if (id) {
+                  const original = indexById.get(id);
+                  if (original) onSelectNode?.(original);
+                }
+              }}
+              cursor="pointer"
+            >
               {/* Card verticale compacte */}
               <foreignObject x={-80} y={-60} width={160} height={120}>
-                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px]">
+                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px] cursor-pointer">
                   {/* Avatar */}
                   {img ? (
-                    <img
+                    <Image
                       src={img}
                       alt={nodeDatum.name}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-400" />
@@ -105,7 +141,7 @@ export default function OrgD3Tree({ data }: Props) {
                   {/* Texte */}
                   <div className="text-center leading-tight">
                     <div className="text-[11px] text-gray-400 font-bold truncate max-w-[140px] mx-auto">
-                      {String(role ?? "")}
+                      {role ?? ""}
                     </div>
                     <div className="text-sm font-semibold text-white truncate max-w-[140px] mx-auto">
                       {nodeDatum.name}
@@ -117,12 +153,11 @@ export default function OrgD3Tree({ data }: Props) {
           );
         }}
         pathClassFunc={(linkDatum) => {
-          // Récupère le rôle du parent (source)
           const parentRole = linkDatum.source?.data?.attributes?.["Rôle"] as
             | string
             | undefined;
-          if (!parentRole) return "branch-default";
 
+          if (!parentRole) return "branch-default";
           if (parentRole === "CEO") return "branch-ceo";
           if (parentRole === "CTO") return "branch-cto";
           if (parentRole === "COO") return "branch-coo";
@@ -131,6 +166,7 @@ export default function OrgD3Tree({ data }: Props) {
           return "branch-default";
         }}
       />
-    </div>
+    </section>
   );
+
 }

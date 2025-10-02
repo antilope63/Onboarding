@@ -16,10 +16,18 @@ interface Overview {
 interface PhaseViewProps {
   phases: Phase[]
   overview: Overview
-  onPhaseOpen: (phase: Phase) => void
+  onPhaseOpen: (phaseIndex: number) => void
+  activeIndex: number | null
+  lockedPhaseIndices: Set<number>
 }
 
-export function PhaseView({ phases, overview, onPhaseOpen }: PhaseViewProps) {
+export function PhaseView({
+  phases,
+  overview,
+  onPhaseOpen,
+  activeIndex,
+  lockedPhaseIndices,
+}: PhaseViewProps) {
   return (
     <motion.div
       key="phase-view"
@@ -31,15 +39,26 @@ export function PhaseView({ phases, overview, onPhaseOpen }: PhaseViewProps) {
     >
       <OverviewCard overview={overview} className="lg:col-span-2" />
 
-      {phases.map((phase, index) => (
-        <PhaseCard
-          key={phase.name}
-          phase={phase}
-          order={index}
-          statusMeta={statusMeta}
-          onClick={() => onPhaseOpen(phase)}
-        />
-      ))}
+      {phases.map((phase, index) => {
+        const locked = lockedPhaseIndices.has(index)
+        const isActive = activeIndex === index
+
+        return (
+          <PhaseCard
+            key={phase.name}
+            phase={phase}
+            order={index}
+            statusMeta={statusMeta}
+            locked={locked}
+            isActive={isActive}
+            onClick={() => {
+              if (!locked) {
+                onPhaseOpen(index)
+              }
+            }}
+          />
+        )
+      })}
     </motion.div>
   )
 }
@@ -48,10 +67,19 @@ interface PhaseCardProps {
   phase: Phase
   order: number
   statusMeta: StatusMeta
+  locked: boolean
+  isActive: boolean
   onClick: () => void
 }
 
-function PhaseCard({ phase, order, statusMeta, onClick }: PhaseCardProps) {
+function PhaseCard({
+  phase,
+  order,
+  statusMeta,
+  locked,
+  isActive,
+  onClick,
+}: PhaseCardProps) {
   const totalTasks = phase.tasks.length
   const verifiedTasks = phase.tasks.filter((task) => task.status === "verified").length
   const completion = totalTasks ? Math.round((verifiedTasks / totalTasks) * 100) : 0
@@ -61,15 +89,38 @@ function PhaseCard({ phase, order, statusMeta, onClick }: PhaseCardProps) {
       layout
       type="button"
       onClick={onClick}
-      whileHover={{ translateY: -4 }}
+      whileHover={locked ? undefined : { translateY: -4 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative flex min-h-[240px] flex-col justify-between overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(34,37,76,0.92),_rgba(25,27,56,0.94))] p-6 text-left text-white shadow-[0_35px_90px_-60px_rgba(8,10,35,0.95)]"
+      className={cn(
+        "group relative flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(34,37,76,0.92),_rgba(25,27,56,0.94))] p-6 text-left text-white shadow-[0_35px_90px_-60px_rgba(8,10,35,0.95)] transition",
+        locked
+          ? "cursor-not-allowed opacity-35 saturate-50"
+          : "hover:-translate-y-1 hover:shadow-[0_45px_120px_-80px_rgba(8,10,35,0.95)]",
+        isActive && !locked
+          ? "border-[#7D5AE0]/40 bg-[radial-gradient(ellipse_at_top,_rgba(123,92,224,0.28),_rgba(27,30,63,0.9))]"
+          : undefined
+      )}
+      aria-disabled={locked}
+      tabIndex={locked ? -1 : 0}
     >
+      {locked && (
+        <span className="absolute right-6 top-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/60">
+          Phase verrouillée
+        </span>
+      )}
+
       <div className="flex flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">
-            Phase {order + 1}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">
+              Phase {order + 1}
+            </span>
+            {isActive && !locked && (
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#7D5AE0]/30 bg-[#7D5AE0]/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#E4DEFF]">
+                Phase active
+              </span>
+            )}
+          </div>
           <h3 className="text-2xl font-semibold tracking-tight text-white">
             {phase.name}
           </h3>

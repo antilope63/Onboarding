@@ -5,8 +5,10 @@ export type Suivi = {
   titre: string;
   type: string;
   date: string;
-  statut: "Obligatoire" | "Optionnel";
+  statut: "Obligatoire" | "Optionnel" | "Programmé";
   couleur: "vert" | "violet" | "orange" | "gris";
+  startAt?: string;
+  endAt?: string;
 };
 
 export const prochainRdv = {
@@ -18,6 +20,9 @@ export const prochainRdv = {
   progression: 8, // en %
   image:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuBgJaWaQHzAym7Myj6nKZmel-OIlHObEqruU_aBZqtXAtAcMxuGHbPy2gBcN1f1Uj_8nptyYrgbc7OHu9XKpSzRO1XN2yDIuSuEMPdeQGB901zDrRSMg-zKWTk7mgFHzEzbbKhs-3299GMhVNQi6HjnixHg0SdYrNhranA3cuAc_hMLwYF3ZzP8_ZkpCS-MatoxKn1dNhFNMWjf2blA3Ia5Qdejov0fBaVdYlnFd9dX73gv4A8Sg8fSOsLS9fanBViht-k-TyAyajNy",
+};
+export const prochainRdvDate = {
+  date: "Demain, 10:00",
 };
 
 export const suivis: Suivi[] = [

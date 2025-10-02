@@ -1,15 +1,19 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
+
+import { useMemo, useState } from "react";
+
+import { prochainRdvDate } from "@/app/Reunion/data";
 import { Task, getPhaseStats, phases } from "@/app/Taches/data";
 import {
   BentoCard,
   BentoCardProps,
   BentoGrid,
 } from "@/components/ui/bento-grid";
-
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   BackpackIcon,
   CalendarIcon,
@@ -23,11 +27,25 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatedBeamBento } from "./animated_beam_bento";
+import { TEAM_MEMBERS } from "./people.data";
 
 export default function Bento_Doug() {
   const { activeIndex } = getPhaseStats(phases);
-  const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
   const activePhase = activeIndex !== null ? phases[activeIndex] : null;
+
+  const { role } = useAuth();
+  const isManager = role === "manager";
+  const isRh = role === "rh";
+  const canManagePeople = isManager || isRh;
+
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
+    TEAM_MEMBERS[0]?.id ?? null
+  );
+
+  const selectedMember = useMemo(() => {
+    if (!selectedMemberId) return TEAM_MEMBERS[0] ?? null;
+    return TEAM_MEMBERS.find((member) => member.id === selectedMemberId) ?? null;
+  }, [selectedMemberId]);
 
   const Iconcolor = "text-white/90";
   const namecolor = "text-white/90";
@@ -77,7 +95,7 @@ export default function Bento_Doug() {
       description: activePhase
         ? `Vous êtes à la phase ${activePhase.name} `
         : "Toutes les phases terminées 🎉",
-      href: "/Tâches",
+      href: "/Taches",
       cta: "Go aux tâches",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -123,8 +141,9 @@ export default function Bento_Doug() {
                       )}
                       title={STATUS_LABEL[t.status]}
                     >
-                      {STATUS_LABEL[t.status]}
-                    </span>
+<Link href="/Formulaire">
+  {STATUS_LABEL[t.status]}
+</Link>                    </span>
                   </li>
                 ))}
               </ul>
@@ -166,10 +185,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: CalendarIcon,
-      name: "Follow up",
-      description: "Votre prochain follow-up est le ",
-      href: "/",
-      cta: "Aller au follow-up",
+      name: "Réunion",
+      description: "Votre prochaine Réunion est " + prochainRdvDate.date,
+      href: "/Reunion",
+      cta: "Aller au Réunion",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -181,7 +200,7 @@ export default function Bento_Doug() {
       Icon: LockClosedIcon,
       name: "Mes accès",
       description: "Gestion de vos accès",
-      href: "/",
+      href: "/Acces",
       cta: "Gérer mes accès",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -194,7 +213,7 @@ export default function Bento_Doug() {
       Icon: IdCardIcon,
       name: "Mes documents",
       description: "Vos documents sont tous réunis ici.",
-      href: "/Documents",
+      href: "/Document",
       cta: "Voir mes documents",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -244,83 +263,11 @@ export default function Bento_Doug() {
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7 bg-[radial-gradient(ellipse_at_0%_0%,#25284F_30%,#1F2245_50%,#1B1B37_100%)]",
       background: <AnimatedBeamBento />,
     },
-    // BOÎTE À OUTILS (logos interactifs)
-    {
-      Icon: BackpackIcon,
-      name: "Boîte à Outils",
-      description: "", // pas de texte
-      cta: "Learn more", // ignoré car hideCta=true
-      hideCta: true, // <<— clé : masque CTA et donc aucune animation de CTA
-      iconColor: Iconcolor,
-      nameColor: namecolor,
-      ctaColor: ctacolor,
-      descriptionColor: descriptioncolor,
-      background: (
-        <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]" />
-          <div
-            className={cn(
-              "absolute inset-0 z-0 grid grid-cols-2 place-items-center h-2/3"
-            )}
-          >
-            {[
-              {
-                src: "/Github_b.svg",
-                alt: "GitHub",
-                href: "https://github.com/antilope63/Onboarding",
-              },
-              {
-                src: "/Unity_B.svg",
-                alt: "Unity",
-                href: "https://unity.com",
-              },
-              {
-                src: "/jira.svg",
-                alt: "Jira",
-                href: "https://www.atlassian.com/software/jira",
-              },
-              {
-                src: "/unreal.png",
-                alt: "Unreal",
-                href: "https://www.unrealengine.com",
-              },
-            ].map((l) => (
-              <Link
-                key={l.alt}
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "transition-all duration-300 cursor-pointer",
-                  "opacity-50 grayscale",
-                  "group-hover/logos:opacity-50 group-hover/logos:grayscale",
-                  "hover:opacity-100 hover:grayscale-0",
-                  "hover:-translate-y-1 hover:scale-105"
-                )}
-                style={{ filter: "none" }}
-              >
-                <Image
-                  src={l.src}
-                  alt={l.alt}
-                  width={64}
-                  height={64}
-                  draggable={false}
-                  priority={false}
-                />
-              </Link>
-            ))}
-          </div>
-        </div>
-      ),
-      className:
-        "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
-    },
-
     {
       Icon: RocketIcon,
       name: "Mes formations",
       description: `Tu as besoin d'aide ? Forme-toi !`,
-      href: "/",
+      href: "/formation",
       cta: "J'ai besoin d'aide",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -330,6 +277,182 @@ export default function Bento_Doug() {
         "rounded-2xl p-6 lg:col-span-3 lg:row-span-1 border border-white/7 bg-gradient-to-r from-[#1B1B37] via-[#1F2245] to-[#25284F]",
     },
   ];
+
+  const peopleCard: BentoCardProps = {
+    Icon: () => null,
+    name: " ",
+    hideCta: true,
+    className:
+      "rounded-2xl lg:col-span-3 lg:row-span-2 border border-white/7",
+    background: (
+      <div className="absolute inset-0 flex flex-col gap-4 bg-gradient-to-br from-[#1B1B37] via-[#1F2245] to-[#25284F] p-6 text-white pointer-events-auto">
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/15 bg-white/10 p-4">
+          {selectedMember?.avatar ? (
+            <Image
+              src={selectedMember.avatar}
+              alt={selectedMember.name}
+              width={72}
+              height={72}
+              className="h-16 w-16 rounded-2xl object-cover"
+            />
+          ) : (
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/10 text-lg font-semibold text-white/60">
+              {selectedMember?.name
+                ?.split(" ")
+                .map((chunk) => chunk[0])
+                .join("")
+                .slice(0, 2) ?? "--"}
+            </div>
+          )}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
+              Profil sélectionné
+            </span>
+            <p className="truncate text-xl font-semibold">
+              {selectedMember?.name ?? "Choisis un collaborateur"}
+            </p>
+            <p className="truncate text-sm text-white/70">
+              {selectedMember
+                ? `${selectedMember.role} · ${selectedMember.team}`
+                : "Sélectionne une personne dans la liste"}
+            </p>
+          </div>
+          {selectedMember && (
+            <div className="flex flex-col items-end gap-1 text-right text-xs text-white/70">
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase">
+                {selectedMember.status ?? "Actif"}
+              </span>
+              <span className="truncate text-white/60">{selectedMember.email}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {TEAM_MEMBERS.map((member) => {
+            const isActive = member.id === selectedMember?.id
+            return (
+              <button
+                key={member.id}
+                type="button"
+                onClick={() => setSelectedMemberId(member.id)}
+                className={cn(
+                  "flex w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left transition",
+                  isActive
+                    ? "border-white/40 bg-white/15 text-white"
+                    : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                {member.avatar ? (
+                  <Image
+                    src={member.avatar}
+                    alt={member.name}
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-sm font-semibold">
+                    {member.name
+                      .split(" ")
+                      .map((chunk) => chunk[0])
+                      .join("")
+                      .slice(0, 2)}
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">
+                    {member.name}
+                  </span>
+                  <span className="truncate text-xs text-white/60">
+                    {member.role}
+                  </span>
+                </div>
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                  {member.status ?? "Actif"}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    ),
+  }
+
+  const toolboxCard: BentoCardProps = {
+    Icon: BackpackIcon,
+    name: "Boîte à Outils",
+    description: "",
+    cta: "Learn more",
+    hideCta: true,
+    iconColor: Iconcolor,
+    nameColor: namecolor,
+    ctaColor: ctacolor,
+    descriptionColor: descriptioncolor,
+    background: (
+      <div className="relative h-full w-full">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#25284F] via-[#1F2245] to-[#1B1B37]" />
+        <div
+          className={cn(
+            "absolute inset-0 z-0 grid grid-cols-2 place-items-center h-2/3"
+          )}
+        >
+          {[
+            {
+              src: "/Github_b.svg",
+              alt: "GitHub",
+              href: "https://github.com/antilope63/Onboarding",
+            },
+            {
+              src: "/Unity_B.svg",
+              alt: "Unity",
+              href: "https://unity.com",
+            },
+            {
+              src: "/jira.svg",
+              alt: "Jira",
+              href: "https://www.atlassian.com/software/jira",
+            },
+            {
+              src: "/unreal.png",
+              alt: "Unreal",
+              href: "https://www.unrealengine.com",
+            },
+          ].map((l) => (
+            <Link
+              key={l.alt}
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "transition-all duration-300 cursor-pointer",
+                "opacity-50 grayscale",
+                "group-hover/logos:opacity-50 group-hover/logos:grayscale",
+                "hover:opacity-100 hover:grayscale-0",
+                "hover:-translate-y-1 hover:scale-105"
+              )}
+              style={{ filter: "none" }}
+            >
+              <Image
+                src={l.src}
+                alt={l.alt}
+                width={64}
+                height={64}
+                draggable={false}
+                priority={false}
+              />
+            </Link>
+          ))}
+        </div>
+      </div>
+    ),
+    className: "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
+  };
+
+  features.splice(
+    -1,
+    0,
+    canManagePeople ? peopleCard : toolboxCard
+  );
 
   return (
     <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
