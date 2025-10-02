@@ -9,6 +9,7 @@ export type FormationSession = {
     role: string;
     image: string;
   };
+  done: boolean;
 };
 
 export const sessions: FormationSession[] = [
@@ -22,7 +23,8 @@ export const sessions: FormationSession[] = [
       name: "Alexis Caron",
       role: "Game Developer",
       image: "/Organigramme/homme5.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-2",
@@ -34,7 +36,8 @@ export const sessions: FormationSession[] = [
       name: "Hugo Martin",
       role: "Technical Artist",
       image: "/Organigramme/homme2.jpeg",
-    }
+    },
+    done: true,
   },
   {
     id: "session-3",
@@ -46,7 +49,8 @@ export const sessions: FormationSession[] = [
       name: "Sophie Chamberlain",
       role: "Responsable Pédagogie",
       image: "/Organigramme/femme3.jpeg",
-    }
+    },
+    done: true,
   },
   {
     id: "session-4",
@@ -58,7 +62,8 @@ export const sessions: FormationSession[] = [
       name: "Camille Bernard",
       role: "Product Owner",
       image: "/Organigramme/femme7.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-5",
@@ -70,7 +75,8 @@ export const sessions: FormationSession[] = [
       name: "Thomas Leroy",
       role: "Scrum Master",
       image: "/Organigramme/homme4.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-6",
@@ -82,7 +88,8 @@ export const sessions: FormationSession[] = [
       name: "Lina Moretti",
       role: "Data Analyst",
       image: "/Organigramme/femme1.jpeg",
-    }
+    },
+    done: true,
   },
   {
     id: "session-7",
@@ -94,7 +101,8 @@ export const sessions: FormationSession[] = [
       name: "Nadia Lopez",
       role: "Cheffe de projet",
       image: "/Organigramme/femme6.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-8",
@@ -106,7 +114,8 @@ export const sessions: FormationSession[] = [
       name: "Ava Chen",
       role: "Admin Outils",
       image: "/Organigramme/femme2.jpeg",
-    }
+    },
+    done: true,
   },
   {
     id: "session-9",
@@ -118,7 +127,8 @@ export const sessions: FormationSession[] = [
       name: "Orlando Diggs",
       role: "Customer Success Lead",
       image: "/Organigramme/homme4.jpeg",
-    }
+    },
+    done: true,
   },
   {
     id: "session-10",
@@ -130,7 +140,8 @@ export const sessions: FormationSession[] = [
       name: "Sarah Dupont",
       role: "Conceptrice de processus",
       image: "/Organigramme/femme5.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-11",
@@ -142,7 +153,8 @@ export const sessions: FormationSession[] = [
       name: "Noah Patel",
       role: "Responsable Formation",
       image: "/Organigramme/homme1.jpeg",
-    }
+    },
+    done: false,
   },
   {
     id: "session-12",
@@ -154,6 +166,7 @@ export const sessions: FormationSession[] = [
       name: "Ava Chen",
       role: "Admin Jira",
       image: "/Organigramme/femme2.jpeg",
-    }
+    },
+    done: false,
   },
 ];

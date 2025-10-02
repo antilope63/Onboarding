@@ -4,6 +4,7 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { OrgNode } from "@/types/org";
+import Image from "next/image";
 
 const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
 
@@ -28,8 +29,10 @@ function toRaw(node: OrgNode): RawNodeDatum {
   return {
     name: node.name,
     attributes: {
+      Id: node.id,
       Rôle: node.title,
       Image: node.image ?? "",
+      OriginalNode: node,
     },
     children: [...baseChildren, ...syntheticTeamLeaf],
   };
@@ -39,9 +42,10 @@ type Props = {
   data: OrgNode;
   width?: number;
   height?: number;
+  onSelectNode?: (node: OrgNode) => void;
 };
 
-export default function OrgD3Tree({ data }: Props) {
+export default function OrgD3Tree({ data, onSelectNode }: Props) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [translate, setTranslate] = useState<{ x: number; y: number }>({
@@ -58,18 +62,20 @@ export default function OrgD3Tree({ data }: Props) {
   const treeData = useMemo(() => toRaw(data), [data]);
 
   return (
-    <div ref={wrapperRef} className="w-full h-[80vh]">
+    <section ref={wrapperRef} className="w-full h-screen">
       <Tree
         data={treeData}
         orientation="vertical"
         pathFunc="step" // "diagonal" ou "elbow" ou "straight" ou "step"
-        zoomable={false}
-        draggable={false}
+        zoomable
+        draggable
+        hasInteractiveNodes
+        scaleExtent={{ min: 0.5, max: 2.5 }}
         translate={translate}
         collapsible={false}
         nodeSize={{ x: 220, y: 140 }}
         separation={{ siblings: 0.7, nonSiblings: 0.9 }}
-        renderCustomNodeElement={({ nodeDatum, toggleNode }) => {
+        renderCustomNodeElement={({ nodeDatum }) => {
           const type = nodeDatum.attributes?.["type"] as string | undefined;
           const role = nodeDatum.attributes?.["Rôle"];
           const img = (nodeDatum.attributes?.["Image"] as string) || "";
@@ -86,17 +92,30 @@ export default function OrgD3Tree({ data }: Props) {
             );
           }
 
+          const original = nodeDatum.attributes?.OriginalNode as
+            | OrgNode
+            | undefined;
+
           return (
-            <g onClick={toggleNode} cursor="default">
+            <g
+              onClick={() => {
+                if (original) {
+                  onSelectNode?.(original);
+                }
+              }}
+              cursor="pointer"
+            >
               {/* Card verticale compacte */}
               <foreignObject x={-80} y={-60} width={160} height={120}>
-                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px]">
+                <div className="relative z-10 flex flex-col items-center gap-2 px-3 py-3 bg-bleu_fonce_2 rounded-md shadow-sm w-[160px] cursor-pointer">
                   {/* Avatar */}
                   {img ? (
-                    <img
+                    <Image
                       src={img}
                       alt={nodeDatum.name}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-400" />
@@ -131,6 +150,7 @@ export default function OrgD3Tree({ data }: Props) {
           return "branch-default";
         }}
       />
-    </div>
+
+    </section>
   );
 }
