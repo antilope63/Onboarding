@@ -98,7 +98,6 @@ export default function Bento_Doug() {
   }, [selectedMemberId, teamMembers]);
 
   const [highlight, setHighlight] = useState<FollowupHighlight | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const isFetchingRef = useRef(false);
@@ -109,44 +108,34 @@ export default function Bento_Doug() {
     };
   }, []);
 
-  const loadData = useCallback(
-    async (withSpinner = false) => {
-      if (isFetchingRef.current) return;
-      isFetchingRef.current = true;
+  const loadData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-      if (withSpinner) {
-        setIsLoading(true);
-      }
+    try {
+      const [phaseRows, memberRows, highlightRow] = await Promise.all([
+        listPhasesWithTasks(),
+        listTeamMembers(),
+        fetchFollowupHighlight(),
+      ]);
 
-      try {
-        const [phaseRows, memberRows, highlightRow] = await Promise.all([
-          listPhasesWithTasks(),
-          listTeamMembers(),
-          fetchFollowupHighlight(),
-        ]);
+      if (!isMountedRef.current) return;
 
-        if (!isMountedRef.current) return;
-
-        setPhasesState(phaseRows);
-        setTeamMembers(memberRows);
-        setHighlight(highlightRow ?? null);
-        setError(null);
-      } catch (err) {
-        if (!isMountedRef.current) return;
-        console.error("BentoGrid: unable to load data", err);
-        setError(err instanceof Error ? err.message : "Erreur inconnue");
-      } finally {
-        isFetchingRef.current = false;
-        if (withSpinner && isMountedRef.current) {
-          setIsLoading(false);
-        }
-      }
-    },
-    []
-  );
+      setPhasesState(phaseRows);
+      setTeamMembers(memberRows);
+      setHighlight(highlightRow ?? null);
+      setError(null);
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      console.error("BentoGrid: unable to load data", err);
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
-    void loadData(true);
+    void loadData();
   }, [loadData]);
 
   useEffect(() => {

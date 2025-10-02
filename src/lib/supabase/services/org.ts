@@ -40,7 +40,7 @@ function serializeNodeUpdate(payload: OrgNodeUpdatePayload) {
 export async function fetchOrgTree(): Promise<OrgNode | null> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbOrgNodeRow>("org_nodes")
+    .from("org_nodes")
     .select("*")
     .order("sort_order", { ascending: true });
 
@@ -98,7 +98,7 @@ export async function createOrgNode(
 ): Promise<OrgNode> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbOrgNodeRow>("org_nodes")
+    .from("org_nodes")
     .insert([serializeNodePayload(payload)])
     .select("*")
     .single();
@@ -109,7 +109,7 @@ export async function createOrgNode(
     );
   }
 
-  return mapOrgNode(data, []);
+  return mapOrgNode(data as DbOrgNodeRow, []);
 }
 
 export async function updateOrgNode(
@@ -118,7 +118,7 @@ export async function updateOrgNode(
 ): Promise<OrgNode> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbOrgNodeRow>("org_nodes")
+    .from("org_nodes")
     .update(serializeNodeUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -130,13 +130,13 @@ export async function updateOrgNode(
     );
   }
 
-  return mapOrgNode(data, []);
+  return mapOrgNode(data as DbOrgNodeRow, []);
 }
 
 export async function deleteOrgNode(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbOrgNodeRow>("org_nodes")
+    .from("org_nodes")
     .delete()
     .eq("id", id);
 

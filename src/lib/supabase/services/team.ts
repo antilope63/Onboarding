@@ -35,7 +35,7 @@ function serializeTeamMemberUpdate(payload: TeamMemberUpdatePayload) {
 export async function listTeamMembers(): Promise<PeopleCardMember[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTeamMemberRow>("team_members")
+    .from("team_members")
     .select("*")
     .order("name", { ascending: true });
 
@@ -45,7 +45,7 @@ export async function listTeamMembers(): Promise<PeopleCardMember[]> {
     );
   }
 
-  return (data ?? []).map(mapTeamMember);
+  return ((data ?? []) as DbTeamMemberRow[]).map(mapTeamMember);
 }
 
 export async function createTeamMember(
@@ -53,7 +53,7 @@ export async function createTeamMember(
 ): Promise<PeopleCardMember> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTeamMemberRow>("team_members")
+    .from("team_members")
     .insert([serializeTeamMember(payload)])
     .select("*")
     .single();
@@ -64,7 +64,7 @@ export async function createTeamMember(
     );
   }
 
-  return mapTeamMember(data);
+  return mapTeamMember(data as DbTeamMemberRow);
 }
 
 export async function updateTeamMember(
@@ -73,7 +73,7 @@ export async function updateTeamMember(
 ): Promise<PeopleCardMember> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTeamMemberRow>("team_members")
+    .from("team_members")
     .update(serializeTeamMemberUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -85,13 +85,13 @@ export async function updateTeamMember(
     );
   }
 
-  return mapTeamMember(data);
+  return mapTeamMember(data as DbTeamMemberRow);
 }
 
 export async function deleteTeamMember(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbTeamMemberRow>("team_members")
+    .from("team_members")
     .delete()
     .eq("id", id);
 

@@ -14,7 +14,6 @@ import {
 import type {
   DbDocumentLinkRow,
   DbFaqItemRow,
-  DbProjectFolderDocumentRow,
   DbProjectFolderRow,
 } from "../types";
 
@@ -52,7 +51,7 @@ function serializeDocumentUpdate(payload: DocumentLinkUpdatePayload) {
 export async function listDocumentLinks(): Promise<DocumentLink[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbDocumentLinkRow>("documentation_links")
+    .from("documentation_links")
     .select("*")
     .order("category", { ascending: true })
     .order("title", { ascending: true });
@@ -63,7 +62,7 @@ export async function listDocumentLinks(): Promise<DocumentLink[]> {
     );
   }
 
-  return (data ?? []).map(mapDocumentLink);
+  return ((data ?? []) as DbDocumentLinkRow[]).map(mapDocumentLink);
 }
 
 export async function createDocumentLink(
@@ -71,7 +70,7 @@ export async function createDocumentLink(
 ): Promise<DocumentLink> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbDocumentLinkRow>("documentation_links")
+    .from("documentation_links")
     .insert([serializeDocumentPayload(payload)])
     .select("*")
     .single();
@@ -82,7 +81,7 @@ export async function createDocumentLink(
     );
   }
 
-  return mapDocumentLink(data);
+  return mapDocumentLink(data as DbDocumentLinkRow);
 }
 
 export async function updateDocumentLink(
@@ -91,7 +90,7 @@ export async function updateDocumentLink(
 ): Promise<DocumentLink> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbDocumentLinkRow>("documentation_links")
+    .from("documentation_links")
     .update(serializeDocumentUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -103,13 +102,13 @@ export async function updateDocumentLink(
     );
   }
 
-  return mapDocumentLink(data);
+  return mapDocumentLink(data as DbDocumentLinkRow);
 }
 
 export async function deleteDocumentLink(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbDocumentLinkRow>("documentation_links")
+    .from("documentation_links")
     .delete()
     .eq("id", id);
 
@@ -123,7 +122,7 @@ export async function deleteDocumentLink(id: string): Promise<void> {
 export async function listProjectFolders(): Promise<ProjectFolder[]> {
   const supabase = getSupabaseBrowserClient();
   const { data: folderRows, error: folderError } = await supabase
-    .from<DbProjectFolderRow>("project_folders")
+    .from("project_folders")
     .select("*")
     .order("name", { ascending: true });
 
@@ -134,7 +133,7 @@ export async function listProjectFolders(): Promise<ProjectFolder[]> {
   }
 
   const { data: linkRows, error: linkError } = await supabase
-    .from<DbProjectFolderDocumentRow>("project_folder_documents")
+    .from("project_folder_documents")
     .select("*");
 
   if (linkError) {
@@ -151,7 +150,7 @@ export async function listProjectFolders(): Promise<ProjectFolder[]> {
     documentsByFolder.set(entry.folderId, bucket);
   });
 
-  return (folderRows ?? []).map((row) =>
+  return ((folderRows ?? []) as DbProjectFolderRow[]).map((row) =>
     mapProjectFolder(row, documentsByFolder.get(row.id) ?? [])
   );
 }
@@ -159,7 +158,7 @@ export async function listProjectFolders(): Promise<ProjectFolder[]> {
 export async function listFaqItems(): Promise<FaqItem[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFaqItemRow>("faq_items")
+    .from("faq_items")
     .select("*")
     .order("category", { ascending: true })
     .order("question", { ascending: true });
@@ -168,5 +167,5 @@ export async function listFaqItems(): Promise<FaqItem[]> {
     throw new Error(`Impossible de récupérer la FAQ: ${error.message}`);
   }
 
-  return (data ?? []).map(mapFaqItem);
+  return ((data ?? []) as DbFaqItemRow[]).map(mapFaqItem);
 }

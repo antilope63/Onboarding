@@ -49,7 +49,7 @@ function serializeTaskUpdate(payload: TaskUpdatePayload) {
 export async function listPhasesWithTasks(): Promise<Phase[]> {
   const supabase = getSupabaseBrowserClient();
   const { data: phaseRows, error: phaseError } = await supabase
-    .from<DbTaskPhaseRow>("task_phases")
+    .from("task_phases")
     .select("*")
     .order("position", { ascending: true });
 
@@ -58,7 +58,7 @@ export async function listPhasesWithTasks(): Promise<Phase[]> {
   }
 
   const { data: taskRows, error: taskError } = await supabase
-    .from<DbTaskRow>("tasks")
+    .from("tasks")
     .select("*")
     .order("created_at", { ascending: true });
 
@@ -67,14 +67,14 @@ export async function listPhasesWithTasks(): Promise<Phase[]> {
   }
 
   const tasksByPhase = new Map<string, Task[]>();
-  (taskRows ?? []).forEach((row) => {
+  ((taskRows ?? []) as DbTaskRow[]).forEach((row) => {
     const task = mapTask(row);
     const bucket = tasksByPhase.get(task.phaseId) ?? [];
     bucket.push(task);
     tasksByPhase.set(task.phaseId, bucket);
   });
 
-  return (phaseRows ?? []).map((row) =>
+  return ((phaseRows ?? []) as DbTaskPhaseRow[]).map((row) =>
     mapPhase(
       row,
       (tasksByPhase.get(row.id) ?? []).sort((a, b) =>
@@ -89,7 +89,7 @@ export async function listPhasesWithTasks(): Promise<Phase[]> {
 export async function createPhase(payload: PhasePayload): Promise<Phase> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTaskPhaseRow>("task_phases")
+    .from("task_phases")
     .insert([serializePhasePayload(payload)])
     .select("*")
     .single();
@@ -98,7 +98,7 @@ export async function createPhase(payload: PhasePayload): Promise<Phase> {
     throw new Error(`Impossible de créer la phase: ${error?.message}`);
   }
 
-  return mapPhase(data, []);
+  return mapPhase(data as DbTaskPhaseRow, []);
 }
 
 export async function updatePhase(
@@ -107,7 +107,7 @@ export async function updatePhase(
 ): Promise<Phase> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTaskPhaseRow>("task_phases")
+    .from("task_phases")
     .update(serializePhaseUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -117,13 +117,13 @@ export async function updatePhase(
     throw new Error(`Impossible de mettre à jour la phase: ${error?.message}`);
   }
 
-  return mapPhase(data, []);
+  return mapPhase(data as DbTaskPhaseRow, []);
 }
 
 export async function deletePhase(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbTaskPhaseRow>("task_phases")
+    .from("task_phases")
     .delete()
     .eq("id", id);
 
@@ -135,16 +135,16 @@ export async function deletePhase(id: string): Promise<void> {
 export async function createTask(payload: TaskPayload): Promise<Task> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTaskRow>("tasks")
+    .from("tasks")
     .insert([serializeTaskPayload(payload)])
     .select("*")
-     .single();
+    .single();
 
   if (error || !data) {
     throw new Error(`Impossible de créer la tâche: ${error?.message}`);
   }
 
-  return mapTask(data);
+  return mapTask(data as DbTaskRow);
 }
 
 export async function updateTask(
@@ -153,7 +153,7 @@ export async function updateTask(
 ): Promise<Task> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbTaskRow>("tasks")
+    .from("tasks")
     .update(serializeTaskUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -163,13 +163,13 @@ export async function updateTask(
     throw new Error(`Impossible de mettre à jour la tâche: ${error?.message}`);
   }
 
-  return mapTask(data);
+  return mapTask(data as DbTaskRow);
 }
 
 export async function deleteTask(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbTaskRow>("tasks")
+    .from("tasks")
     .delete()
     .eq("id", id);
 

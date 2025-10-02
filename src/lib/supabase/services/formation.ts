@@ -61,7 +61,7 @@ function serializeSessionUpdate(payload: FormationSessionUpdatePayload) {
 export async function listFormationSessions(): Promise<FormationSession[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFormationSessionRow>("formation_sessions")
+    .from("formation_sessions")
     .select("*")
     .order("title", { ascending: true });
 
@@ -69,7 +69,7 @@ export async function listFormationSessions(): Promise<FormationSession[]> {
     throw new Error(`Impossible de récupérer les formations: ${error.message}`);
   }
 
-  return (data ?? []).map(mapFormationSession);
+  return ((data ?? []) as DbFormationSessionRow[]).map(mapFormationSession);
 }
 
 export async function createFormationSession(
@@ -77,7 +77,7 @@ export async function createFormationSession(
 ): Promise<FormationSession> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFormationSessionRow>("formation_sessions")
+    .from("formation_sessions")
     .insert([serializeSessionPayload(payload)])
     .select("*")
     .single();
@@ -95,7 +95,7 @@ export async function updateFormationSession(
 ): Promise<FormationSession> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFormationSessionRow>("formation_sessions")
+    .from("formation_sessions")
     .update(serializeSessionUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -111,7 +111,7 @@ export async function updateFormationSession(
 export async function deleteFormationSession(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbFormationSessionRow>("formation_sessions")
+    .from("formation_sessions")
     .delete()
     .eq("id", id);
 
@@ -123,7 +123,7 @@ export async function deleteFormationSession(id: string): Promise<void> {
 export async function listScheduledSessions(): Promise<ScheduledSession[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFormationScheduleRow>("formation_session_schedule")
+    .from("formation_session_schedule")
     .select("*")
     .order("scheduled_date", { ascending: true });
 
@@ -133,7 +133,7 @@ export async function listScheduledSessions(): Promise<ScheduledSession[]> {
     );
   }
 
-  return (data ?? []).map(mapFormationSchedule);
+  return ((data ?? []) as DbFormationScheduleRow[]).map(mapFormationSchedule);
 }
 
 export type ScheduleSessionPayload = {
@@ -147,7 +147,7 @@ export async function upsertScheduledSession(
 ): Promise<ScheduledSession> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFormationScheduleRow>("formation_session_schedule")
+    .from("formation_session_schedule")
     .upsert(
       {
         session_id: payload.sessionId,
@@ -171,7 +171,7 @@ export async function upsertScheduledSession(
 export async function deleteScheduledSession(sessionId: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbFormationScheduleRow>("formation_session_schedule")
+    .from("formation_session_schedule")
     .delete()
     .eq("session_id", sessionId);
 
@@ -185,7 +185,7 @@ export async function deleteScheduledSession(sessionId: string): Promise<void> {
 export async function clearScheduledSessions(): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbFormationScheduleRow>("formation_session_schedule")
+    .from("formation_session_schedule")
     .delete()
     .neq("session_id", "");
 

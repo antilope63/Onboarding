@@ -53,7 +53,7 @@ function serializeHighlightUpdate(
 export async function fetchFollowupHighlight(): Promise<FollowupHighlight | null> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupHighlightRow>("followup_highlights")
+    .from("followup_highlights")
     .select("*")
     .limit(1)
     .single();
@@ -68,7 +68,7 @@ export async function fetchFollowupHighlight(): Promise<FollowupHighlight | null
     return null;
   }
 
-  return mapFollowupHighlight(data);
+  return mapFollowupHighlight(data as DbFollowupHighlightRow);
 }
 
 export async function saveFollowupHighlight(
@@ -76,8 +76,8 @@ export async function saveFollowupHighlight(
 ): Promise<FollowupHighlight> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupHighlightRow>("followup_highlights")
-    .upsert(serializeHighlightPayload(payload), { onConflict: "id" })
+    .from("followup_highlights")
+    .upsert([serializeHighlightPayload(payload)], { onConflict: "id" })
     .select("*")
     .single();
 
@@ -87,7 +87,7 @@ export async function saveFollowupHighlight(
     );
   }
 
-  return mapFollowupHighlight(data);
+  return mapFollowupHighlight(data as DbFollowupHighlightRow);
 }
 
 export async function updateFollowupHighlight(
@@ -96,7 +96,7 @@ export async function updateFollowupHighlight(
 ): Promise<FollowupHighlight> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupHighlightRow>("followup_highlights")
+    .from("followup_highlights")
     .update(serializeHighlightUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -108,7 +108,7 @@ export async function updateFollowupHighlight(
     );
   }
 
-  return mapFollowupHighlight(data);
+  return mapFollowupHighlight(data as DbFollowupHighlightRow);
 }
 
 export type FollowupMeetingPayload = Omit<
@@ -149,7 +149,7 @@ function serializeMeetingUpdate(
 export async function listFollowupMeetings(): Promise<FollowupMeeting[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupMeetingRow>("followup_meetings")
+    .from("followup_meetings")
     .select("*")
     .order("date_label", { ascending: true });
 
@@ -157,7 +157,7 @@ export async function listFollowupMeetings(): Promise<FollowupMeeting[]> {
     throw new Error(`Impossible de récupérer les suivis: ${error.message}`);
   }
 
-  return (data ?? []).map(mapFollowupMeeting);
+  return ((data ?? []) as DbFollowupMeetingRow[]).map(mapFollowupMeeting);
 }
 
 export async function createFollowupMeeting(
@@ -165,7 +165,7 @@ export async function createFollowupMeeting(
 ): Promise<FollowupMeeting> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupMeetingRow>("followup_meetings")
+    .from("followup_meetings")
     .insert([serializeMeetingPayload(payload)])
     .select("*")
     .single();
@@ -174,7 +174,7 @@ export async function createFollowupMeeting(
     throw new Error(`Impossible de créer le suivi: ${error?.message}`);
   }
 
-  return mapFollowupMeeting(data);
+  return mapFollowupMeeting(data as DbFollowupMeetingRow);
 }
 
 export async function updateFollowupMeeting(
@@ -183,7 +183,7 @@ export async function updateFollowupMeeting(
 ): Promise<FollowupMeeting> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
-    .from<DbFollowupMeetingRow>("followup_meetings")
+    .from("followup_meetings")
     .update(serializeMeetingUpdate(payload))
     .eq("id", id)
     .select("*")
@@ -193,13 +193,13 @@ export async function updateFollowupMeeting(
     throw new Error(`Impossible de mettre à jour le suivi: ${error?.message}`);
   }
 
-  return mapFollowupMeeting(data);
+  return mapFollowupMeeting(data as DbFollowupMeetingRow);
 }
 
 export async function deleteFollowupMeeting(id: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase
-    .from<DbFollowupMeetingRow>("followup_meetings")
+    .from("followup_meetings")
     .delete()
     .eq("id", id);
 
