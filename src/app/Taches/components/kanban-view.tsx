@@ -1,32 +1,28 @@
-"use client";
+"use client"
 
-import { useCallback, type DragEvent } from "react";
-import { motion } from "motion/react";
+import { useCallback, type DragEvent } from "react"
+import { motion } from "motion/react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-import type { TaskStatus } from "../data";
-import { statusMeta } from "./status-meta";
+import type { TaskStatus } from "../data"
+import { statusMeta } from "./status-meta"
 
 interface KanbanTask {
-  phase: string;
-  phaseIndex: number;
-  taskIndex: number;
-  name: string;
-  description: string;
-  locked: boolean;
+  phase: string
+  phaseIndex: number
+  taskIndex: number
+  name: string
+  description: string
+  locked: boolean
 }
 
 interface KanbanViewProps {
-  columns: Record<TaskStatus, KanbanTask[]>;
-  onStatusChange: (
-    phaseIndex: number,
-    taskIndex: number,
-    nextStatus: TaskStatus
-  ) => void;
+  columns: Record<TaskStatus, KanbanTask[]>
+  onStatusChange: (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => void
 }
 
-const STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "done", "verified"];
+const STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "done", "verified"]
 
 export function KanbanView({ columns, onStatusChange }: KanbanViewProps) {
   return (
@@ -47,62 +43,57 @@ export function KanbanView({ columns, onStatusChange }: KanbanViewProps) {
         />
       ))}
     </motion.div>
-  );
+  )
 }
 
 interface KanbanColumnProps {
-  status: TaskStatus;
-  tasks: KanbanTask[];
-  onStatusChange: (
-    phaseIndex: number,
-    taskIndex: number,
-    nextStatus: TaskStatus
-  ) => void;
+  status: TaskStatus
+  tasks: KanbanTask[]
+  onStatusChange: (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => void
 }
 
 function KanbanColumn({ status, tasks, onStatusChange }: KanbanColumnProps) {
-  const isDroppable = status !== "verified";
+  const isDroppable = status !== "verified"
 
   const handleDragOver = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
-      if (!isDroppable) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
+      if (!isDroppable) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = "move"
     },
     [isDroppable]
-  );
+  )
 
   const handleDrop = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
-      if (!isDroppable) return;
-      event.preventDefault();
-      const raw = event.dataTransfer.getData("application/json");
-      if (!raw) return;
+      if (!isDroppable) return
+      event.preventDefault()
+      const raw = event.dataTransfer.getData("application/json")
+      if (!raw) return
 
       try {
         const payload = JSON.parse(raw) as {
-          phaseIndex: number;
-          taskIndex: number;
-          status: TaskStatus;
-        };
-
-        if (
-          !payload ||
-          typeof payload.phaseIndex !== "number" ||
-          typeof payload.taskIndex !== "number"
-        ) {
-          return;
+          phaseIndex: number
+          taskIndex: number
+          status: TaskStatus
         }
 
-        if (payload.status === status) return;
+        if (
+          typeof payload?.phaseIndex !== "number" ||
+          typeof payload?.taskIndex !== "number"
+        ) {
+          return
+        }
 
-        onStatusChange(payload.phaseIndex, payload.taskIndex, status);
+        if (payload.status === status) return
+
+        onStatusChange(payload.phaseIndex, payload.taskIndex, status)
       } catch (error) {
-        console.error("Invalid drag payload", error);
+        console.error("Invalid drag payload", error)
       }
     },
     [isDroppable, onStatusChange, status]
-  );
+  )
 
   return (
     <motion.div
@@ -121,9 +112,7 @@ function KanbanColumn({ status, tasks, onStatusChange }: KanbanColumnProps) {
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${statusMeta[status].dot}`}
-            />
+            <span className={`h-2.5 w-2.5 rounded-full ${statusMeta[status].dot}`} />
             {statusMeta[status].label}
           </div>
           {isDroppable && (
@@ -140,91 +129,12 @@ function KanbanColumn({ status, tasks, onStatusChange }: KanbanColumnProps) {
       <div className="flex flex-1 flex-col gap-4">
         {tasks.length ? (
           tasks.map((task) => (
-            <motion.div
-              layout
+            <KanbanCard
               key={`${task.phaseIndex}-${task.taskIndex}`}
-              // IMPORTANT: on laisse motion.div gérer uniquement l'animation.
-              // Les props HTML5 Drag & Drop sont sur le <div> interne ci-dessous.
-              className="contents"
-            >
-              <div
-                draggable={isDroppable && !task.locked}
-                onDragStart={(event: DragEvent<HTMLDivElement>) => {
-                  if (task.locked || !isDroppable) {
-                    event.preventDefault();
-                    return;
-                  }
-                  const node = event.currentTarget as HTMLElement | null;
-                  if (node) {
-                    const preview = node.cloneNode(true) as HTMLElement;
-                    preview.style.position = "fixed";
-                    preview.style.top = "-1000px";
-                    preview.style.left = "-1000px";
-                    preview.style.width = `${node.offsetWidth}px`;
-                    preview.style.height = `${node.offsetHeight}px`;
-                    preview.style.pointerEvents = "none";
-                    preview.style.borderRadius =
-                      getComputedStyle(node).borderRadius;
-                    const previewId = `drag-preview-${task.phaseIndex}-${
-                      task.taskIndex
-                    }-${Date.now()}`;
-                    preview.id = previewId;
-                    document.body.appendChild(preview);
-                    (node as any).dataset.dragPreviewId = previewId;
-                    event.dataTransfer.setDragImage(
-                      preview,
-                      preview.offsetWidth / 2,
-                      preview.offsetHeight / 2
-                    );
-                    requestAnimationFrame(() => {
-                      node.classList.add("opacity-0");
-                    });
-                  }
-                  event.dataTransfer.effectAllowed = "move";
-                  const payload = JSON.stringify({
-                    phaseIndex: task.phaseIndex,
-                    taskIndex: task.taskIndex,
-                    status,
-                  });
-                  event.dataTransfer.setData("application/json", payload);
-                  event.dataTransfer.setData("text/plain", task.name);
-                }}
-                onDragEnd={(event: DragEvent<HTMLDivElement>) => {
-                  const node = event.currentTarget as HTMLElement | null;
-                  if (node) {
-                    const previewId = (node as any).dataset.dragPreviewId;
-                    if (previewId) {
-                      const preview = document.getElementById(previewId);
-                      if (preview && preview.parentNode) {
-                        preview.parentNode.removeChild(preview);
-                      }
-                      delete (node as any).dataset.dragPreviewId;
-                    }
-                    node.classList.remove("opacity-0");
-                  }
-                }}
-                className={cn(
-                  "rounded-[24px] border border-white/10 bg-[#151935]/85 p-5 shadow-[0_30px_90px_-70px_rgba(4,6,29,0.95)] transition",
-                  task.locked
-                    ? "cursor-not-allowed opacity-40"
-                    : "cursor-grab active:cursor-grabbing"
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-base font-medium text-white">
-                      {task.name}
-                    </p>
-                    <p className="mt-2 text-xs text-white/60">
-                      {task.description}
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">
-                    {task.phase}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+              task={task}
+              status={status}
+              isDroppable={isDroppable}
+            />
           ))
         ) : (
           <motion.div
@@ -236,5 +146,106 @@ function KanbanColumn({ status, tasks, onStatusChange }: KanbanColumnProps) {
         )}
       </div>
     </motion.div>
-  );
+  )
+}
+
+interface KanbanCardProps {
+  task: KanbanTask
+  status: TaskStatus
+  isDroppable: boolean
+}
+
+function KanbanCard({ task, status, isDroppable }: KanbanCardProps) {
+  const handleDragStart = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (task.locked || !isDroppable) {
+        event.preventDefault()
+        return
+      }
+
+      const node = event.currentTarget as HTMLElement | null
+      if (node) {
+        const preview = node.cloneNode(true) as HTMLElement
+        preview.style.position = "fixed"
+        preview.style.top = "-1000px"
+        preview.style.left = "-1000px"
+        preview.style.width = `${node.offsetWidth}px`
+        preview.style.height = `${node.offsetHeight}px`
+        preview.style.pointerEvents = "none"
+        preview.style.borderRadius = getComputedStyle(node).borderRadius
+        const previewId = `drag-preview-${task.phaseIndex}-${task.taskIndex}-${Date.now()}`
+        preview.id = previewId
+        document.body.appendChild(preview)
+
+        const nodeWithDataset = node as HTMLElement & {
+          dataset: DOMStringMap & { dragPreviewId?: string }
+        }
+        nodeWithDataset.dataset.dragPreviewId = previewId
+
+        event.dataTransfer.setDragImage(
+          preview,
+          preview.offsetWidth / 2,
+          preview.offsetHeight / 2
+        )
+
+        requestAnimationFrame(() => {
+          node.classList.add("opacity-0")
+        })
+      }
+
+      event.dataTransfer.effectAllowed = "move"
+      const payload = JSON.stringify({
+        phaseIndex: task.phaseIndex,
+        taskIndex: task.taskIndex,
+        status,
+      })
+      event.dataTransfer.setData("application/json", payload)
+      event.dataTransfer.setData("text/plain", task.name)
+    },
+    [isDroppable, status, task]
+  )
+
+  const handleDragEnd = useCallback((event: DragEvent<HTMLDivElement>) => {
+    const node = event.currentTarget as HTMLElement | null
+    if (!node) return
+
+    const nodeWithDataset = node as HTMLElement & {
+      dataset: DOMStringMap & { dragPreviewId?: string }
+    }
+    const previewId = nodeWithDataset.dataset.dragPreviewId
+    if (previewId) {
+      const preview = document.getElementById(previewId)
+      if (preview?.parentNode) {
+        preview.parentNode.removeChild(preview)
+      }
+      delete nodeWithDataset.dataset.dragPreviewId
+    }
+    node.classList.remove("opacity-0")
+  }, [])
+
+  return (
+    <motion.div layout>
+      <div
+        draggable={isDroppable && !task.locked}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        className={cn(
+          "rounded-[24px] border border-white/10 bg-[#151935]/85 p-5 shadow-[0_30px_90px_-70px_rgba(4,6,29,0.95)] transition",
+          task.locked
+            ? "cursor-not-allowed opacity-40"
+            : "cursor-grab active:cursor-grabbing"
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-base font-medium text-white">{task.name}</p>
+            <p className="mt-2 text-xs text-white/60">{task.description}</p>
+          </div>
+          <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">
+            {task.phase}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  )
 }
