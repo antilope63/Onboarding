@@ -6,5 +6,3 @@ export type OrgNode = {
   count?: number; // Taille d'équipe optionnelle
   children?: OrgNode[];
 };
-
-

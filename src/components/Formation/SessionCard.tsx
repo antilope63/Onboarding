@@ -60,6 +60,9 @@ export default function SessionCard({
       <div className="relative z-10 flex flex-col p-2 px-4 bg-white/80 backdrop-blur-sm rounded-2xl">
         <h3 className="text-xl font-semibold text-black">{title}</h3>
         <p className="text-sm text-black/70">{subtitle}</p>
+        <span className="sr-only">
+          {description} — animé par {formatter.name}, {formatter.role}
+        </span>
       </div>
     </section>
   );

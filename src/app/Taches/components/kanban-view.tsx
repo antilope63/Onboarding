@@ -20,11 +20,16 @@ interface KanbanTask {
 interface KanbanViewProps {
   columns: Record<TaskStatus, KanbanTask[]>
   onStatusChange: (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => void
+  allowVerifiedDrop?: boolean
 }
 
 const STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "done", "verified"]
 
-export function KanbanView({ columns, onStatusChange }: KanbanViewProps) {
+export function KanbanView({
+  columns,
+  onStatusChange,
+  allowVerifiedDrop = false,
+}: KanbanViewProps) {
   return (
     <motion.div
       key="kanban-view"
@@ -40,6 +45,7 @@ export function KanbanView({ columns, onStatusChange }: KanbanViewProps) {
           status={status}
           tasks={columns[status]}
           onStatusChange={onStatusChange}
+          allowVerifiedDrop={allowVerifiedDrop}
         />
       ))}
     </motion.div>
@@ -50,10 +56,16 @@ interface KanbanColumnProps {
   status: TaskStatus
   tasks: KanbanTask[]
   onStatusChange: (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => void
+  allowVerifiedDrop: boolean
 }
 
-function KanbanColumn({ status, tasks, onStatusChange }: KanbanColumnProps) {
-  const isDroppable = status !== "verified"
+function KanbanColumn({
+  status,
+  tasks,
+  onStatusChange,
+  allowVerifiedDrop,
+}: KanbanColumnProps) {
+  const isDroppable = allowVerifiedDrop || status !== "verified"
 
   const handleDragOver = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
