@@ -224,26 +224,27 @@ function KanbanCard({ task, status, isDroppable }: KanbanCardProps) {
   }, [])
 
   return (
-    <motion.div
-      layout
-      draggable={isDroppable && !task.locked}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      className={cn(
-        "rounded-[24px] border border-white/10 bg-[#151935]/85 p-5 shadow-[0_30px_90px_-70px_rgba(4,6,29,0.95)] transition",
-        task.locked
-          ? "cursor-not-allowed opacity-40"
-          : "cursor-grab active:cursor-grabbing"
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-base font-medium text-white">{task.name}</p>
-          <p className="mt-2 text-xs text-white/60">{task.description}</p>
+    <motion.div layout>
+      <div
+        draggable={isDroppable && !task.locked}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        className={cn(
+          "rounded-[24px] border border-white/10 bg-[#151935]/85 p-5 shadow-[0_30px_90px_-70px_rgba(4,6,29,0.95)] transition",
+          task.locked
+            ? "cursor-not-allowed opacity-40"
+            : "cursor-grab active:cursor-grabbing"
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-base font-medium text-white">{task.name}</p>
+            <p className="mt-2 text-xs text-white/60">{task.description}</p>
+          </div>
+          <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">
+            {task.phase}
+          </span>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">
-          {task.phase}
-        </span>
       </div>
     </motion.div>
   )
