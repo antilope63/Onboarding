@@ -1,57 +1,13 @@
 // app/followup/page.tsx
 "use client";
 
-
-import { useState, useRef, useEffect, useMemo } from "react";
-import { prochainRdv, suivis } from "./data";
-import { CalendarClock, Users, Briefcase } from "lucide-react";
-import BackButton from "@/components/BackButton";
-import FollowupCalendar from "@/components/FollowupCalendar";
-import { useFormationSchedule } from "@/contexts/FormationScheduleContext";
-import { sessions as formationSessions } from "@/app/formation/data";
-
-export default function FollowupPage() {
-  const [activeTab, setActiveTab] = useState<"liste" | "calendrier">("liste");
-  // Récupère les réservations de formation afin de les afficher comme réunions
-  const { scheduledSessions } = useFormationSchedule();
-
-  // Associe l'id de session formation -> métadonnées (titre, formateur, ...)
-  const idToFormation = useMemo(
-    () => new Map(formationSessions.map((s) => [s.id, s])),
-    []
-  );
-
-  // Convertit les réservations en éléments compatibles avec la liste `suivis`
-  const suivisFromFormation = useMemo(
-    () =>
-      scheduledSessions.map((item) => {
-        const meta = idToFormation.get(item.sessionId);
-        const dateObj = new Date(item.date);
-
-        return {
-          id: `formation-${item.sessionId}`,
-          titre: meta?.title ?? "Formation programmée",
-          type: meta ? meta.formatter.name : "Formation",
-          date: dateObj.toLocaleString("fr-FR", {
-            weekday: "short",
-            day: "2-digit",
-            month: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          statut: "Programmé" as const,
-          couleur: "violet" as const,
-        };
-      }),
-    [scheduledSessions, idToFormation]
-  );
-
-  // Fusionne les suivis statiques et ceux issus des réservations formation
-  const allSuivis = useMemo(
-    () => [...suivis, ...suivisFromFormation],
-    [suivisFromFormation]
-    
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { prochainRdv, suivis, type Suivi } from "./data";
 import {
   CalendarClock,
@@ -97,7 +53,6 @@ export default function FollowupPage() {
   const manualIds = useMemo(
     () => new Set(meetings.map((meeting) => meeting.id)),
     [meetings]
-
   );
 
   const [activeTab, setActiveTab] = useState<"liste" | "calendrier">("liste");
@@ -175,9 +130,7 @@ export default function FollowupPage() {
     if (!window.confirm(`Supprimer la réunion "${meeting.titre}" ?`)) {
       return;
     }
-    setMeetings((previous) =>
-      previous.filter((item) => item.id !== meeting.id)
-    );
+    setMeetings((previous) => previous.filter((item) => item.id !== meeting.id));
   };
 
   const scheduledSuivis = useMemo(() => {
@@ -228,12 +181,6 @@ export default function FollowupPage() {
 
         <div>
           <h1 className="text-5xl font-bold tracking-tighter text-white">
-
-            Bienvenue dans votre suivi
-          </h1>
-          <p className="mt-3 text-lg text-gray-400">
-            Voici un aperçu de vos prochains rendez-vous.
-
             Bienvenue dans ton suivi !
           </h1>
           <p className="mt-3 text-lg text-gray-400">
@@ -263,9 +210,7 @@ export default function FollowupPage() {
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-sm font-medium text-gray-300">
-
                     Temps avant ton prochain rendez-vous :
-
                   </p>
                   <p className="text-sm font-bold text-[#663BD6]">
                     {prochainRdv.tempsRestant}
@@ -288,52 +233,16 @@ export default function FollowupPage() {
         </div>
 
         <div className="flex flex-col gap-5 p-6 rounded-lg bg-[#1D1E3B] border border-[#22254C] shadow-lg">
-          <div className="flex justify-between items-center">
-
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-bold tracking-tight text-white">
               Suivis à venir
             </h2>
 
-            {/* Switch Liste | Calendrier */}
-            <div className="relative flex bg-[#22254C] rounded-lg p-1">
-              <div
-                className="absolute top-1 bottom-1 bg-[#7D5AE0] rounded-md transition-all duration-500 ease-in-out"
-                style={{
-                  left: indicatorStyle.left,
-                  width: indicatorStyle.width,
-                }}
-              />
-              <button
-                ref={listeRef}
-                onClick={() => setActiveTab("liste")}
-                className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${
-                  activeTab === "liste"
-                    ? "text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                Liste
-              </button>
-              <button
-                ref={calendrierRef}
-                onClick={() => setActiveTab("calendrier")}
-                className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-all ${
-                  activeTab === "calendrier"
-                    ? "text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                Calendrier
-              </button>
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
               <div className="relative flex bg-[#22254C] rounded-lg p-1 self-start">
                 <div
                   className="absolute top-1 bottom-1 bg-[#7D5AE0] rounded-md transition-all duration-500 ease-in-out"
-                  style={{
-                    left: indicatorStyle.left,
-                    width: indicatorStyle.width,
-                  }}
+                  style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
                 />
                 <button
                   ref={listeRef}
@@ -377,8 +286,6 @@ export default function FollowupPage() {
               {allSuivis.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors cursor-pointer"
-                >
                   className="relative flex items-center gap-4 p-5 rounded-lg bg-[#22254C] hover:bg-[#663BD6]/20 transition-colors"
                 >
                   {canManageMeetings && manualIds.has(item.id) && (
@@ -476,8 +383,8 @@ export default function FollowupPage() {
                   : "Programmer une réunion"}
               </DialogTitle>
               <DialogDescription className="text-white/70">
-                Planifie un suivi personnalisé pour accompagner l&apos;arrivée
-                de ton talent.
+                Planifie un suivi personnalisé pour accompagner l&apos;arrivée de
+                ton talent.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleMeetingSubmit} className="space-y-4">
