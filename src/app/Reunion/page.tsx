@@ -39,7 +39,8 @@ export default function FollowupPage() {
                 <p className="text-sm font-medium text-[#7D5AE0]">{prochainRdv.date}</p>
                 <p className="text-2xl font-bold text-white">{prochainRdv.titre}</p>
                 <p className="text-base text-gray-400">
-                  {prochainRdv.type} - Préparez vos notes et objectifs pour cette session.
+                  {prochainRdv.type} - Préparez vos notes et objectifs pour
+                  cette session.
                 </p>
                 <span className="inline-flex items-center rounded-full bg-green-100/20 text-green-300 px-4 py-1.5 text-sm font-medium w-fit">
                   {prochainRdv.statut}

@@ -1,8 +1,13 @@
 // app/ton-chemin/Bento_Doug.tsx (ou components/Bento-grid/Bento-grid.tsx selon ton arbo)
 "use client";
 
-import { Task, getPhaseStats, phases } from "@/app/Tâches/data";
-import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+import { prochainRdvDate } from "@/app/Reunion/data";
+import { Task, getPhaseStats, phases } from "@/app/Taches/data";
+import {
+  BentoCard,
+  BentoCardProps,
+  BentoGrid,
+} from "@/components/ui/bento-grid";
 import { CircularProgress } from "@/components/ui/CircularProgress.tsx";
 import { Marquee } from "@/components/ui/marquee";
 import { cn } from "@/lib/utils";
@@ -22,7 +27,6 @@ import { AnimatedBeamBento } from "./animated_beam_bento";
 
 export default function Bento_Doug() {
   const { activeIndex } = getPhaseStats(phases);
-  const phaseNumber = activeIndex !== null ? activeIndex + 1 : phases.length;
   const activePhase = activeIndex !== null ? phases[activeIndex] : null;
 
   const Iconcolor = "text-white/90";
@@ -66,14 +70,14 @@ export default function Bento_Doug() {
     },
   ];
 
-  const features = [
+  const features: BentoCardProps[] = [
     {
       Icon: ListBulletIcon,
       name: "Tâches",
       description: activePhase
         ? `Vous êtes à la phase ${activePhase.name} `
         : "Toutes les phases terminées 🎉",
-      href: "/Tâches",
+      href: "/Taches",
       cta: "Go aux tâches",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -119,8 +123,9 @@ export default function Bento_Doug() {
                       )}
                       title={STATUS_LABEL[t.status]}
                     >
-                      {STATUS_LABEL[t.status]}
-                    </span>
+<Link href="/Formulaire">
+  {STATUS_LABEL[t.status]}
+</Link>                    </span>
                   </li>
                 ))}
               </ul>
@@ -162,10 +167,10 @@ export default function Bento_Doug() {
     },
     {
       Icon: CalendarIcon,
-      name: "Follow up",
-      description: "Votre prochain follow-up est le ",
-      href: "/",
-      cta: "Aller au follow-up",
+      name: "Réunion",
+      description: "Votre prochaine Réunion est " + prochainRdvDate.date,
+      href: "/Réunion",
+      cta: "Aller au Réunion",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -177,7 +182,7 @@ export default function Bento_Doug() {
       Icon: LockClosedIcon,
       name: "Mes accès",
       description: "Gestion de vos accès",
-      href: "/",
+      href: "/Acces",
       cta: "Gérer mes accès",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -190,7 +195,7 @@ export default function Bento_Doug() {
       Icon: IdCardIcon,
       name: "Mes documents",
       description: "Vos documents sont tous réunis ici.",
-      href: "/Documents",
+      href: "/Document",
       cta: "Voir mes documents",
       iconColor: Iconcolor,
       nameColor: namecolor,
@@ -316,7 +321,7 @@ export default function Bento_Doug() {
       Icon: RocketIcon,
       name: "Mes formations",
       description: `Tu as besoin d'aide ? Forme-toi !`,
-      href: "/",
+      href: "/formation",
       cta: "J'ai besoin d'aide",
       iconColor: Iconcolor,
       nameColor: namecolor,

@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
 
 const LoginSchema = z.object({
   email: z
@@ -29,12 +30,22 @@ const LoginSchema = z.object({
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { setAuth } = useAuth();
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  function onSubmit() {
+  function resolveRole(email: string): UserRole {
+    const normalized = email.trim().toLowerCase();
+    if (normalized === "manager@pixelplay.com") return "manager";
+    if (normalized === "rh@pixelplay.com") return "rh";
+    return "user";
+  }
+
+  function onSubmit(values: z.infer<typeof LoginSchema>) {
+    const role = resolveRole(values.email);
+    setAuth({ email: values.email.trim(), role });
     router.push("/");
   }
 

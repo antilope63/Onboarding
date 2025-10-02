@@ -1,13 +1,13 @@
-export type TaskStatus = "todo" | "in-progress" | "done" | "verified";
+export type TaskStatus = "todo" | "in-progress" | "done" | "verified"
 
 export interface Task {
-  name: string;
-  description: string;
-  status: TaskStatus;
+  name: string
+  description: string
+  status: TaskStatus
 }
 export interface Phase {
-  name: string;
-  tasks: Task[];
+  name: string
+  tasks: Task[]
 }
 
 export const phases: Phase[] = [
@@ -32,7 +32,7 @@ export const phases: Phase[] = [
     ],
   },
   {
-    name: "Phase 2: UI",
+    name: "UI",
     tasks: [
       {
         name: "Design mockups",
@@ -52,7 +52,7 @@ export const phases: Phase[] = [
     ],
   },
   {
-    name: "Phase 3: Features",
+    name: "Features",
     tasks: [
       {
         name: "Progress bar",
@@ -66,39 +66,39 @@ export const phases: Phase[] = [
       },
     ],
   },
-];
+]
 
 export function getActivePhaseIndex(phases: Phase[]): number | null {
   for (let i = 0; i < phases.length; i++) {
-    const phase = phases[i];
-    const allDone = phase.tasks.every((t) => t.status === "done");
+    const phase = phases[i]
+    const allDone = phase.tasks.every((t) => t.status === "done")
     if (!allDone) {
-      return i;
+      return i
     }
   }
-  return null; // toutes les phases sont finies
+  return null
 }
 export function getPhaseStats(phases: Phase[]) {
-  const activeIndex = getActivePhaseIndex(phases);
+  const activeIndex = getActivePhaseIndex(phases)
 
   if (activeIndex === null) {
     return {
       activeIndex: null,
       done: 0,
       total: 0,
-      percent: 100, // tout terminé
-    };
+      percent: 100,
+    }
   }
 
-  const activePhase = phases[activeIndex];
-  const total = activePhase.tasks.length;
-  const done = activePhase.tasks.filter((t) => t.status === "verified").length;
-  const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+  const activePhase = phases[activeIndex]
+  const total = activePhase.tasks.length
+  const done = activePhase.tasks.filter((t) => t.status === "verified").length
+  const percent = total === 0 ? 0 : Math.round((done / total) * 100)
 
   return {
     activeIndex,
     done,
     total,
     percent,
-  };
+  }
 }
