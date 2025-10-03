@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react"
-import BackButton from "@/components/BackButton" // ajuste le chemin si nécessaire
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -22,6 +21,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/AuthContext"
+import NavBar from "@/components/NavBar";
+
 
 type DocumentIcon = "file" | "laptop" | "shield" | "book"
 
@@ -147,11 +148,11 @@ export default function DocumentsPage() {
   return (
     <div className="bg-noir font-sans text-gray-200 min-h-screen flex flex-col relative">
       <div className="absolute top-4 left-4 z-10">
-        <BackButton label="Accueil" href="/" />
       </div>
 
 
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-40">
+        <NavBar classname="absolute top-0 left-0" />
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-violet-fonce-1">
