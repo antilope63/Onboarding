@@ -104,10 +104,11 @@ export default function Bento_Doug() {
 
   const [highlight, setHighlight] = useState<FollowupHighlight | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const isMountedRef = useRef(true);
+  const isMountedRef = useRef(false);
   const isFetchingRef = useRef(false);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
