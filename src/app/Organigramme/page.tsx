@@ -513,7 +513,7 @@ export default function OrganigrammePage() {
 
           <DialogFooter>
             <div className="flex w-full items-center justify-between">
-              {selectedNode && selectedNode.id !== treeData.id ? (
+              {canManage && selectedNode && selectedNode.id !== treeData.id ? (
                 <Button
                   type="button"
                   variant="outline"
