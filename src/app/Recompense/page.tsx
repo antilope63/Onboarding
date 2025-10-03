@@ -1,6 +1,4 @@
-// app/achievement/page.tsx
-"use client";
-
+import type { Metadata } from "next";
 import {
   Share2,
   ShieldCheck,
@@ -8,7 +6,29 @@ import {
   Settings,
   CheckCircle,
   CheckSquare,
-} from "lucide-react"; // Icônes shadcn/lucide
+} from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "PixelPlay - Intégration terminée 🎉",
+  description:
+    "J'ai terminé mon intégration chez PixelPlay et je suis officiellement employé ! 🚀",
+  openGraph: {
+    title: "PixelPlay - Intégration terminée 🎉",
+    description:
+      "J'ai terminé mon intégration chez PixelPlay et je suis officiellement employé ! 🚀",
+    url: "https://onboarding-brown-rho.vercel.app/Recompense", // l’URL publique de ta page
+    siteName: "PixelPlay",
+    images: [
+      {
+        url: "https://onboarding-brown-rho.vercel.app/Image_recompense.png", // 👉 image de félicitations
+        width: 1200,
+        height: 630,
+        alt: "Succès PixelPlay - Intégration terminée",
+      },
+    ],
+    type: "website",
+  },
+};
 
 export default function AchievementPage() {
   return (
@@ -16,10 +36,10 @@ export default function AchievementPage() {
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-5xl font-bold">Félicitations !</h1>
+          <h1 className="text-5xl font-bold">Félicitations !</h1>
           <p className="mt-4 text-lg text-gray-400">
             Vous avez terminé votre intégration et débloqué votre statut
-            d&apos;employé PixelPlay !
+            d&apos;employé PixelPlay !
           </p>
         </div>
 
@@ -29,7 +49,7 @@ export default function AchievementPage() {
             className="w-32 h-32 flex-shrink-0 bg-center bg-cover rounded-lg"
             style={{
               backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8tvLqYwhSi09qWkFfFCEzyw0yAW84ukC0ZXh-lDYxcVvNvq2pnYnh14YaVbPGfTTXbZjEzCpzovxJFpfO28Cq2BYfrc9SwtWhNAtZTdzdy8UPOZzB_gUoLLZUhdMb0OOueXUPyV1EyLMK8F9QG_aI3socs4jMtVvy8DFh4OFoCBg45xLZb4JWN_zz-ynBYa76zQzqLtJaMJluzFBcWlmame8-MfLPB6GZv4f3tfzpK3sniYhHrJDjITM6E3WhUficXcu62gMJ8HD8")',
+                'url("https://ton-site.com/images/achievement.png")',
             }}
           />
           <div className="flex-1 text-center sm:text-left">
@@ -37,16 +57,18 @@ export default function AchievementPage() {
               Succès débloqué
             </p>
             <h2 className="text-3xl font-bold mt-1 text-white">
-              Intégration terminée !
+              Intégration terminée !
             </h2>
             <p className="mt-2">
-              Bienvenue dans l&apos;équipe ! Vous êtes prêt à commencer votre
+              Bienvenue dans l&apos;équipe ! Vous êtes prêt à commencer votre
               aventure chez PixelPlay.
             </p>
           </div>
+
+          {/* Bouton LinkedIn */}
           <a
             href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-              "https://ton-site.com"
+              "https://onboarding-brown-rho.vercel.app/Recompense"
             )}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -63,7 +85,7 @@ export default function AchievementPage() {
             className="w-32 h-32 flex-shrink-0 bg-center bg-cover rounded-lg"
             style={{
               backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCtRf7fl8VfrV_1qbZfsC2N_n7os5Qcw08nCyVnY1wGF_OrEAaYuSo2XKwA0qrqnK2cqASJ2MkpopzLEtayOe2HyB8unWSBW-3SgQnT33Z2phHS7H7PvrPwJ8VvWQkFcea8UNNdUPo-xKBw492n4zI8w43va1bcRNhIZgQxDFIPQ-tnunZdmZ1tHY98lHY3vGSOWH50bDnZO9Q0ic7fEc9Kal17XWe8QCEhhYpDwGDsYKzM5lPSQnNZmLpP-btn5M4XuA8-LA-_JW9H")',
+                'url("https://ton-site.com/images/avatar.png")',
             }}
           />
           <div className="flex-1 text-center sm:text-left">
