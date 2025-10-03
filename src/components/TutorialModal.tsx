@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AUTH_STORAGE_KEY } from "@/contexts/AuthContext";
 
 const LOCAL_STORAGE_KEY = "tutorial_seen";
 
@@ -15,6 +16,20 @@ export default function TutorialModal() {
 
   React.useEffect(() => {
     try {
+      // Ne pas afficher pour les managers ou RH
+      const rawAuth = window.localStorage.getItem(AUTH_STORAGE_KEY);
+      if (rawAuth) {
+        try {
+          const parsed = JSON.parse(rawAuth) as { role?: unknown };
+          const role = parsed?.role;
+          if (role === "manager" || role === "rh") {
+            return;
+          }
+        } catch {
+          // ignore JSON errors, on continue vers le flux user
+        }
+      }
+
       const hasSeen = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (!hasSeen) {
         const timeoutId = window.setTimeout(() => setOpen(true), 500);
