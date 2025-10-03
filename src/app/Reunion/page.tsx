@@ -273,9 +273,9 @@ export default function FollowupPage() {
 
   return (
     <main className="min-h-screen w-full bg-[#04061D] font-display text-gray-200 px-4 py-10 sm:px-6 lg:px-12">
-      <div className="mx-auto max-w-7xl flex flex-col gap-10 pt-30 relative">
-        <NavBar classname="absolute top-0 left-0" />
+              <NavBar classname="absolute top-0 left-0" />
 
+      <div className="mx-auto max-w-7xl flex flex-col gap-10 pt-30 relative">
         <div>
           <h1 className="text-5xl font-bold tracking-tighter text-white">
             Bienvenue dans ton suivi !
