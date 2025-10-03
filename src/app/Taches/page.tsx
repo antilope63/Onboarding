@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
-import { AnimatePresence } from "motion/react"
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence } from "motion/react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,161 +11,168 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { useAuth } from "@/contexts/AuthContext"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
-import type { Phase, TaskStatus } from "@/types/tasks"
+import type { Phase, TaskStatus } from "@/types/tasks";
 import {
   createTask,
   deleteTask,
   listPhasesWithTasks,
   updateTask,
   updateTaskStatus,
-} from "@/lib/supabase/services/tasks"
-import { KanbanView } from "./components/kanban-view"
-import { PhaseModal } from "./components/phase-modal"
-import { PhaseView } from "./components/phase-view"
-import { ViewOption, ViewToggle } from "./components/view-toggle"
+} from "@/lib/supabase/services/tasks";
+import { KanbanView } from "./components/kanban-view";
+import { PhaseModal } from "./components/phase-modal";
+import { PhaseView } from "./components/phase-view";
+import { ViewOption, ViewToggle } from "./components/view-toggle";
 import NavBar from "@/components/NavBar";
 
 type KanbanColumns = Record<
   TaskStatus,
   {
-    phase: string
-    phaseIndex: number
-    taskIndex: number
-    name: string
-    description: string
-    locked: boolean
+    phase: string;
+    phaseIndex: number;
+    taskIndex: number;
+    name: string;
+    description: string;
+    locked: boolean;
   }[]
->
+>;
 
 const viewTabs: { id: ViewOption; label: string }[] = [
   { id: "phase", label: "Par phase" },
   { id: "kanban", label: "Kanban" },
-]
+];
 
 const clonePhases = (source: Phase[]): Phase[] =>
   source.map((phase) => ({
     ...phase,
     tasks: phase.tasks.map((task) => ({ ...task })),
-  }))
+  }));
 
 export default function TasksPage() {
-  const [phasesState, setPhasesState] = useState<Phase[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [phasesState, setPhasesState] = useState<Phase[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true
+    let active = true;
 
     const load = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const data = await listPhasesWithTasks()
-        if (!active) return
-        setPhasesState(clonePhases(data))
-        setError(null)
+        const data = await listPhasesWithTasks();
+        if (!active) return;
+        setPhasesState(clonePhases(data));
+        setError(null);
       } catch (err) {
-        if (!active) return
-        console.error("TasksPage: unable to load phases", err)
-        setError(err instanceof Error ? err.message : "Erreur inconnue")
+        if (!active) return;
+        console.error("TasksPage: unable to load phases", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
         if (active) {
-          setIsLoading(false)
+          setIsLoading(false);
         }
       }
-    }
+    };
 
-    void load()
+    void load();
 
     return () => {
-      active = false
-    }
-  }, [])
-  const [view, setView] = useState<ViewOption>("phase")
+      active = false;
+    };
+  }, []);
+  const [view, setView] = useState<ViewOption>("phase");
   const [selectedPhaseIndex, setSelectedPhaseIndex] = useState<number | null>(
     null
-  )
+  );
 
-  const { role } = useAuth()
-  const canManageTasks = role === "manager"
+  const { role } = useAuth();
+  const canManageTasks = role === "manager";
 
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [taskForm, setTaskForm] = useState<{
-    phaseIndex: number
-    name: string
-    description: string
-    status: TaskStatus
+    phaseIndex: number;
+    name: string;
+    description: string;
+    status: TaskStatus;
   }>(() => ({
     phaseIndex: 0,
     name: "",
     description: "",
     status: "todo",
-  }))
-  const [editingContext, setEditingContext] = useState<
-    { phaseIndex: number; taskIndex: number } | null
-  >(null)
+  }));
+  const [editingContext, setEditingContext] = useState<{
+    phaseIndex: number;
+    taskIndex: number;
+  } | null>(null);
 
   const selectedPhase =
-    selectedPhaseIndex !== null ? phasesState[selectedPhaseIndex] ?? null : null
+    selectedPhaseIndex !== null
+      ? phasesState[selectedPhaseIndex] ?? null
+      : null;
 
   const activePhaseIndex = useMemo(() => {
     const idx = phasesState.findIndex((phase) =>
       phase.tasks.some((task) => task.status !== "verified")
-    )
+    );
 
-    return idx === -1 ? null : idx
-  }, [phasesState])
+    return idx === -1 ? null : idx;
+  }, [phasesState]);
 
   const lockedPhaseIndices = useMemo(() => {
     if (canManageTasks) {
-      return new Set<number>()
+      return new Set<number>();
     }
-    const locked = new Set<number>()
+    const locked = new Set<number>();
     if (activePhaseIndex === null) {
-      return locked
+      return locked;
     }
 
-    for (let index = activePhaseIndex + 1; index < phasesState.length; index++) {
-      locked.add(index)
+    for (
+      let index = activePhaseIndex + 1;
+      index < phasesState.length;
+      index++
+    ) {
+      locked.add(index);
     }
-    return locked
-  }, [activePhaseIndex, phasesState.length, canManageTasks])
+    return locked;
+  }, [activePhaseIndex, phasesState.length, canManageTasks]);
 
   const overview = useMemo(() => {
     const totalTasks = phasesState.reduce(
       (acc, phase) => acc + phase.tasks.length,
       0
-    )
+    );
     const completedTasks = phasesState.reduce(
       (acc, phase) =>
         acc + phase.tasks.filter((task) => task.status === "verified").length,
       0
-    )
+    );
 
     const completion = totalTasks
       ? Math.round((completedTasks / totalTasks) * 100)
-      : 0
+      : 0;
 
     const activeName =
       activePhaseIndex !== null
         ? phasesState[activePhaseIndex]?.name ?? "Tout est validé 🎉"
-        : "Tout est validé 🎉"
+        : "Tout est validé 🎉";
 
     return {
       completion,
       totalTasks,
       completedTasks,
       activePhaseName: activeName,
-    }
-  }, [phasesState, activePhaseIndex])
+    };
+  }, [phasesState, activePhaseIndex]);
 
   const kanbanColumns = useMemo<KanbanColumns>(() => {
     return phasesState.reduce<KanbanColumns>(
       (acc, phase, phaseIndex) => {
-        const isLocked = lockedPhaseIndices.has(phaseIndex)
+        const isLocked = lockedPhaseIndices.has(phaseIndex);
 
         phase.tasks.forEach((task, taskIndex) => {
           acc[task.status].push({
@@ -174,12 +181,11 @@ export default function TasksPage() {
             taskIndex,
             name: task.name,
             description: task.description,
-            locked:
-              !canManageTasks && (isLocked || task.status === "verified"),
-          })
-        })
+            locked: !canManageTasks && (isLocked || task.status === "verified"),
+          });
+        });
 
-        return acc
+        return acc;
       },
       {
         todo: [],
@@ -187,209 +193,216 @@ export default function TasksPage() {
         done: [],
         verified: [],
       }
-    )
-  }, [phasesState, lockedPhaseIndices, canManageTasks])
+    );
+  }, [phasesState, lockedPhaseIndices, canManageTasks]);
 
   const handlePhaseOpen = useCallback(
     (phaseIndex: number) => {
       if (lockedPhaseIndices.has(phaseIndex)) {
-        return
+        return;
       }
-      setSelectedPhaseIndex(phaseIndex)
+      setSelectedPhaseIndex(phaseIndex);
     },
     [lockedPhaseIndices]
-  )
+  );
 
   const handleModalClose = useCallback(() => {
-    setSelectedPhaseIndex(null)
-  }, [])
+    setSelectedPhaseIndex(null);
+  }, []);
 
   const handleTaskStatusChange = useCallback(
     async (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => {
-      const phase = phasesState[phaseIndex]
-      const task = phase?.tasks[taskIndex]
-      if (!phase || !task) return
+      const phase = phasesState[phaseIndex];
+      const task = phase?.tasks[taskIndex];
+      if (!phase || !task) return;
 
-      const phaseLocked = lockedPhaseIndices.has(phaseIndex)
+      const phaseLocked = lockedPhaseIndices.has(phaseIndex);
       if (!canManageTasks) {
         if (nextStatus === "verified" || phaseLocked) {
-          return
+          return;
         }
       } else if (phaseLocked) {
-        return
+        return;
       }
 
       if (task.status === "verified" || task.status === nextStatus) {
-        return
+        return;
       }
 
       try {
-        const updated = await updateTaskStatus(task.id, nextStatus)
+        const updated = await updateTaskStatus(task.id, nextStatus);
         setPhasesState((prev) =>
           prev.map((currentPhase, index) => {
-            if (index !== phaseIndex) return currentPhase
+            if (index !== phaseIndex) return currentPhase;
             const tasks = currentPhase.tasks.map((currentTask, idx) => {
-              if (idx !== taskIndex) return currentTask
-              return { ...currentTask, ...updated }
-            })
-            return { ...currentPhase, tasks }
+              if (idx !== taskIndex) return currentTask;
+              return { ...currentTask, ...updated };
+            });
+            return { ...currentPhase, tasks };
           })
-        )
+        );
       } catch (err) {
-        console.error("TasksPage: unable to update task status", err)
+        console.error("TasksPage: unable to update task status", err);
       }
     },
     [canManageTasks, lockedPhaseIndices, phasesState]
-  )
+  );
 
   const openTaskDialog = useCallback(
     (phaseIndex: number | null, taskIndex: number | null) => {
       const safePhaseIndex = Math.max(
         0,
         Math.min(phaseIndex ?? activePhaseIndex ?? 0, phasesState.length - 1)
-      )
+      );
       if (taskIndex !== null && phaseIndex !== null) {
-        const task = phasesState[phaseIndex]?.tasks[taskIndex]
-        if (!task) return
+        const task = phasesState[phaseIndex]?.tasks[taskIndex];
+        if (!task) return;
         setTaskForm({
           phaseIndex,
           name: task.name,
           description: task.description,
           status: task.status,
-        })
-        setEditingContext({ phaseIndex, taskIndex })
+        });
+        setEditingContext({ phaseIndex, taskIndex });
       } else {
         setTaskForm({
           phaseIndex: safePhaseIndex,
           name: "",
           description: "",
           status: "todo",
-        })
-        setEditingContext(null)
+        });
+        setEditingContext(null);
       }
-      setIsTaskDialogOpen(true)
+      setIsTaskDialogOpen(true);
     },
     [activePhaseIndex, phasesState]
-  )
+  );
 
   const handleTaskDelete = useCallback(
     async (phaseIndex: number, taskIndex: number) => {
-      const phase = phasesState[phaseIndex]
-      const task = phase?.tasks[taskIndex]
+      const phase = phasesState[phaseIndex];
+      const task = phase?.tasks[taskIndex];
       if (!phase || !task) {
-        return
+        return;
       }
 
       const confirmed = window.confirm(
         `Supprimer la tâche "${task.name}" de la phase ${phase.name} ?`
-      )
-      if (!confirmed) return
+      );
+      if (!confirmed) return;
 
       try {
-        await deleteTask(task.id)
+        await deleteTask(task.id);
         setPhasesState((prev) =>
           prev.map((currentPhase, index) => {
-            if (index !== phaseIndex) return currentPhase
-            const tasks = currentPhase.tasks.filter((currentTask) => currentTask.id !== task.id)
-            return { ...currentPhase, tasks }
+            if (index !== phaseIndex) return currentPhase;
+            const tasks = currentPhase.tasks.filter(
+              (currentTask) => currentTask.id !== task.id
+            );
+            return { ...currentPhase, tasks };
           })
-        )
+        );
       } catch (err) {
-        console.error("TasksPage: unable to delete task", err)
+        console.error("TasksPage: unable to delete task", err);
       }
     },
     [phasesState]
-  )
+  );
 
   const handleTaskFormSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
-      if (phasesState.length === 0) return
+      event.preventDefault();
+      if (phasesState.length === 0) return;
 
-      const phase = phasesState[taskForm.phaseIndex]
-      if (!phase) return
+      const phase = phasesState[taskForm.phaseIndex];
+      if (!phase) return;
 
-      const name = taskForm.name.trim()
-      if (!name) return
+      const name = taskForm.name.trim();
+      if (!name) return;
 
       const payload = {
         name,
         description: taskForm.description.trim(),
         status: taskForm.status,
-      }
+      };
 
       try {
         if (editingContext) {
-          const targetPhase = phasesState[editingContext.phaseIndex]
-          const targetTask = targetPhase?.tasks[editingContext.taskIndex]
+          const targetPhase = phasesState[editingContext.phaseIndex];
+          const targetTask = targetPhase?.tasks[editingContext.taskIndex];
           if (!targetTask) {
-            return
+            return;
           }
-          const updated = await updateTask(targetTask.id, payload)
+          const updated = await updateTask(targetTask.id, payload);
           setPhasesState((prev) =>
             prev.map((currentPhase, index) => {
-              if (index !== editingContext.phaseIndex) return currentPhase
+              if (index !== editingContext.phaseIndex) return currentPhase;
               const tasks = currentPhase.tasks.map((currentTask, idx) =>
                 idx === editingContext.taskIndex
                   ? { ...currentTask, ...updated }
                   : currentTask
-              )
-              return { ...currentPhase, tasks }
+              );
+              return { ...currentPhase, tasks };
             })
-          )
+          );
         } else {
           const created = await createTask({
             phaseId: phase.id,
             ...payload,
-          })
+          });
           setPhasesState((prev) =>
             prev.map((currentPhase, index) => {
-              if (index !== taskForm.phaseIndex) return currentPhase
-              return { ...currentPhase, tasks: [...currentPhase.tasks, created] }
+              if (index !== taskForm.phaseIndex) return currentPhase;
+              return {
+                ...currentPhase,
+                tasks: [...currentPhase.tasks, created],
+              };
             })
-          )
+          );
         }
 
-        setIsTaskDialogOpen(false)
-        setEditingContext(null)
+        setIsTaskDialogOpen(false);
+        setEditingContext(null);
       } catch (err) {
-        console.error("TasksPage: unable to save task", err)
+        console.error("TasksPage: unable to save task", err);
       }
     },
     [editingContext, phasesState, taskForm]
-  )
+  );
 
   const handleTaskEditRequest = useCallback(
     (phaseIndex: number, taskIndex: number) => {
-      openTaskDialog(phaseIndex, taskIndex)
+      openTaskDialog(phaseIndex, taskIndex);
     },
     [openTaskDialog]
-  )
+  );
 
   const handleTaskCreateRequest = useCallback(() => {
-    openTaskDialog(activePhaseIndex ?? 0, null)
-  }, [activePhaseIndex, openTaskDialog])
+    openTaskDialog(activePhaseIndex ?? 0, null);
+  }, [activePhaseIndex, openTaskDialog]);
 
   const resetTaskDialog = useCallback(() => {
-    setIsTaskDialogOpen(false)
-    setEditingContext(null)
-  }, [])
+    setIsTaskDialogOpen(false);
+    setEditingContext(null);
+  }, []);
 
   if (isLoading) {
     return (
       <div className="relative min-h-screen bg-[#090B1E] py-16 text-white flex items-center justify-center">
         <p className="text-white/70 text-lg">Chargement des tâches...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="relative min-h-screen bg-[#090B1E] py-16 text-white flex flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-semibold">Impossible de charger les tâches</h1>
+        <h1 className="text-2xl font-semibold">
+          Impossible de charger les tâches
+        </h1>
         <p className="text-white/70">{error}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -408,8 +421,8 @@ export default function TasksPage() {
               Pilotage des tâches
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-white/70">
-              Choisis une vue pour suivre l&apos;avancement des phases ou navigue par
-              statut avec le Kanban.
+              Choisis une vue pour suivre l&apos;avancement des phases ou
+              navigue par statut avec le Kanban.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -458,7 +471,10 @@ export default function TasksPage() {
         onTaskDelete={canManageTasks ? handleTaskDelete : undefined}
       />
 
-      <Dialog open={isTaskDialogOpen} onOpenChange={(open) => (!open ? resetTaskDialog() : null)}>
+      <Dialog
+        open={isTaskDialogOpen}
+        onOpenChange={(open) => (!open ? resetTaskDialog() : null)}
+      >
         <DialogContent className="bg-[#13162F] text-white border-white/10">
           <DialogHeader>
             <DialogTitle>
@@ -546,7 +562,7 @@ export default function TasksPage() {
                 type="button"
                 variant="outline"
                 onClick={resetTaskDialog}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/40 bg-white/10 text-white hover:bg-white focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 Annuler
               </Button>
@@ -561,5 +577,5 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

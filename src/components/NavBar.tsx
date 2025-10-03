@@ -42,7 +42,7 @@ export default function NavBar({ classname }: NavBarProps) {
             className="h-8 px-3 cursor-pointer mr-4"
             onClick={() => {
               clearAuth();
-              router.replace("/login");
+              router.replace("/Login");
             }}
           >
             Déconnexion
