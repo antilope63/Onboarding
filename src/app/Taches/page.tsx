@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useCallback, useMemo, useState } from "react"
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { AnimatePresence } from "motion/react"
 
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/AuthContext"
 
-import type { Phase, TaskStatus } from "./data"
-import { phases as initialPhases } from "./data"
+import type { Phase, TaskStatus } from "@/types/tasks"
+import {
+  createTask,
+  deleteTask,
+  listPhasesWithTasks,
+  updateTask,
+  updateTaskStatus,
+} from "@/lib/supabase/services/tasks"
 import { KanbanView } from "./components/kanban-view"
 import { PhaseModal } from "./components/phase-modal"
 import { PhaseView } from "./components/phase-view"
@@ -46,9 +52,37 @@ const clonePhases = (source: Phase[]): Phase[] =>
   }))
 
 export default function TasksPage() {
-  const [phasesState, setPhasesState] = useState<Phase[]>(() =>
-    clonePhases(initialPhases)
-  )
+  const [phasesState, setPhasesState] = useState<Phase[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        const data = await listPhasesWithTasks()
+        if (!active) return
+        setPhasesState(clonePhases(data))
+        setError(null)
+      } catch (err) {
+        if (!active) return
+        console.error("TasksPage: unable to load phases", err)
+        setError(err instanceof Error ? err.message : "Erreur inconnue")
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void load()
+
+    return () => {
+      active = false
+    }
+  }, [])
   const [view, setView] = useState<ViewOption>("phase")
   const [selectedPhaseIndex, setSelectedPhaseIndex] = useState<number | null>(
     null
@@ -170,7 +204,11 @@ export default function TasksPage() {
   }, [])
 
   const handleTaskStatusChange = useCallback(
-    (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => {
+    async (phaseIndex: number, taskIndex: number, nextStatus: TaskStatus) => {
+      const phase = phasesState[phaseIndex]
+      const task = phase?.tasks[taskIndex]
+      if (!phase || !task) return
+
       const phaseLocked = lockedPhaseIndices.has(phaseIndex)
       if (!canManageTasks) {
         if (nextStatus === "verified" || phaseLocked) {
@@ -180,29 +218,27 @@ export default function TasksPage() {
         return
       }
 
-      setPhasesState((prev) =>
-        prev.map((phase, index) => {
-          if (index !== phaseIndex) {
-            return phase
-          }
+      if (task.status === "verified" || task.status === nextStatus) {
+        return
+      }
 
-          const tasks = phase.tasks.map((task, currentIndex) => {
-            if (currentIndex !== taskIndex) {
-              return task
-            }
-
-            if (task.status === "verified" || task.status === nextStatus) {
-              return task
-            }
-
-            return { ...task, status: nextStatus }
+      try {
+        const updated = await updateTaskStatus(task.id, nextStatus)
+        setPhasesState((prev) =>
+          prev.map((currentPhase, index) => {
+            if (index !== phaseIndex) return currentPhase
+            const tasks = currentPhase.tasks.map((currentTask, idx) => {
+              if (idx !== taskIndex) return currentTask
+              return { ...currentTask, ...updated }
+            })
+            return { ...currentPhase, tasks }
           })
-
-          return { ...phase, tasks }
-        })
-      )
+        )
+      } catch (err) {
+        console.error("TasksPage: unable to update task status", err)
+      }
     },
-    [canManageTasks, lockedPhaseIndices]
+    [canManageTasks, lockedPhaseIndices, phasesState]
   )
 
   const openTaskDialog = useCallback(
@@ -236,7 +272,7 @@ export default function TasksPage() {
   )
 
   const handleTaskDelete = useCallback(
-    (phaseIndex: number, taskIndex: number) => {
+    async (phaseIndex: number, taskIndex: number) => {
       const phase = phasesState[phaseIndex]
       const task = phase?.tasks[taskIndex]
       if (!phase || !task) {
@@ -248,50 +284,76 @@ export default function TasksPage() {
       )
       if (!confirmed) return
 
-      setPhasesState((prev) =>
-        prev.map((currentPhase, index) => {
-          if (index !== phaseIndex) return currentPhase
-          const tasks = currentPhase.tasks.filter((_, idx) => idx !== taskIndex)
-          return { ...currentPhase, tasks }
-        })
-      )
+      try {
+        await deleteTask(task.id)
+        setPhasesState((prev) =>
+          prev.map((currentPhase, index) => {
+            if (index !== phaseIndex) return currentPhase
+            const tasks = currentPhase.tasks.filter((currentTask) => currentTask.id !== task.id)
+            return { ...currentPhase, tasks }
+          })
+        )
+      } catch (err) {
+        console.error("TasksPage: unable to delete task", err)
+      }
     },
     [phasesState]
   )
 
   const handleTaskFormSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       if (phasesState.length === 0) return
 
+      const phase = phasesState[taskForm.phaseIndex]
+      if (!phase) return
+
+      const name = taskForm.name.trim()
+      if (!name) return
+
       const payload = {
-        name: taskForm.name.trim(),
+        name,
         description: taskForm.description.trim(),
         status: taskForm.status,
       }
 
-      if (!payload.name) {
-        return
-      }
-
-      setPhasesState((prev) =>
-        prev.map((phase, index) => {
-          if (index !== taskForm.phaseIndex) return phase
-
-          if (editingContext && editingContext.phaseIndex === index) {
-            const tasks = phase.tasks.map((task, taskIndex) => {
-              if (taskIndex !== editingContext.taskIndex) return task
-              return { ...task, ...payload }
-            })
-            return { ...phase, tasks }
+      try {
+        if (editingContext) {
+          const targetPhase = phasesState[editingContext.phaseIndex]
+          const targetTask = targetPhase?.tasks[editingContext.taskIndex]
+          if (!targetTask) {
+            return
           }
+          const updated = await updateTask(targetTask.id, payload)
+          setPhasesState((prev) =>
+            prev.map((currentPhase, index) => {
+              if (index !== editingContext.phaseIndex) return currentPhase
+              const tasks = currentPhase.tasks.map((currentTask, idx) =>
+                idx === editingContext.taskIndex
+                  ? { ...currentTask, ...updated }
+                  : currentTask
+              )
+              return { ...currentPhase, tasks }
+            })
+          )
+        } else {
+          const created = await createTask({
+            phaseId: phase.id,
+            ...payload,
+          })
+          setPhasesState((prev) =>
+            prev.map((currentPhase, index) => {
+              if (index !== taskForm.phaseIndex) return currentPhase
+              return { ...currentPhase, tasks: [...currentPhase.tasks, created] }
+            })
+          )
+        }
 
-          return { ...phase, tasks: [...phase.tasks, payload] }
-        })
-      )
-
-      setIsTaskDialogOpen(false)
-      setEditingContext(null)
+        setIsTaskDialogOpen(false)
+        setEditingContext(null)
+      } catch (err) {
+        console.error("TasksPage: unable to save task", err)
+      }
     },
     [editingContext, phasesState, taskForm]
   )
@@ -311,6 +373,23 @@ export default function TasksPage() {
     setIsTaskDialogOpen(false)
     setEditingContext(null)
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen bg-[#090B1E] py-16 text-white flex items-center justify-center">
+        <p className="text-white/70 text-lg">Chargement des tâches...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="relative min-h-screen bg-[#090B1E] py-16 text-white flex flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-semibold">Impossible de charger les tâches</h1>
+        <p className="text-white/70">{error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#090B1E] py-16 text-white">

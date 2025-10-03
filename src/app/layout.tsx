@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FormationScheduleProvider } from "@/contexts/FormationScheduleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import TaskRedirector from "@/components/TaskRedirector"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <FormationScheduleProvider>{children}</FormationScheduleProvider>
+          <FormationScheduleProvider>
+            <TaskRedirector />
+            {children}
+          </FormationScheduleProvider>
         </AuthProvider>
       </body>
     </html>

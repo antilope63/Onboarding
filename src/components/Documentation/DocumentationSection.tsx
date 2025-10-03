@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
   ArrowUpRight,
@@ -19,11 +19,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import type { DocumentLink, ProjectFolder } from "@/types/documentation";
 import {
-  DOCUMENT_LINKS,
-  PROJECT_FOLDERS,
-  type DocumentLink,
-} from "@/app/documentation/data";
+  createDocumentLink,
+  deleteDocumentLink,
+  listDocumentLinks,
+  listProjectFolders,
+  updateDocumentLink,
+} from "@/lib/supabase/services/documentation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -77,23 +80,68 @@ function isExternalLink(href: string, explicit?: boolean) {
   return /^https?:\/\//.test(href);
 }
 
+function sortDocuments(list: DocumentLink[]): DocumentLink[] {
+  return [...list].sort((a, b) => {
+    const categoryOrder = a.category.localeCompare(b.category);
+    if (categoryOrder !== 0) return categoryOrder;
+    return a.title.localeCompare(b.title);
+  });
+}
+
 export default function DocumentationSection({
   className,
 }: DocumentationSectionProps) {
   const { role } = useAuth();
   const canManageDocs = role === "manager";
 
-  const [documents, setDocuments] = useState<DocumentLink[]>(DOCUMENT_LINKS);
+  const [documents, setDocuments] = useState<DocumentLink[]>([]);
+  const [folders, setFolders] = useState<ProjectFolder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDocId, setEditingDocId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     href: "",
-    category: DOCUMENT_LINKS[0]?.category ?? "",
+    category: "",
     iconKey: ICON_CHOICES[0]?.value ?? "file",
     external: false,
   });
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const [docRows, folderRows] = await Promise.all([
+          listDocumentLinks(),
+          listProjectFolders(),
+        ]);
+        if (!active) return;
+        setDocuments(sortDocuments(docRows));
+        setFolders(
+          [...folderRows].sort((a, b) => a.name.localeCompare(b.name))
+        );
+        setError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("DocumentationSection: unable to load", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const documentsByCategory = useMemo(() => {
     return documents.reduce<Record<string, DocumentLink[]>>((acc, doc) => {
@@ -110,6 +158,15 @@ export default function DocumentationSection({
     return Array.from(new Set(documents.map((doc) => doc.category)));
   }, [documents]);
 
+  useEffect(() => {
+    if (!form.category && availableCategories.length) {
+      setForm((prev) => ({
+        ...prev,
+        category: availableCategories[0] ?? "",
+      }));
+    }
+  }, [availableCategories, form.category]);
+
   const resetForm = () => {
     setForm({
       title: "",
@@ -124,13 +181,12 @@ export default function DocumentationSection({
 
   const openDialog = (doc?: DocumentLink) => {
     if (doc) {
-      const iconEntry = Object.entries(ICON_MAP).find(([, icon]) => icon === doc.icon);
       setForm({
         title: doc.title,
         description: doc.description,
         href: doc.href,
         category: doc.category,
-        iconKey: (iconEntry?.[0] as IconKey) ?? "file",
+        iconKey: (doc.iconKey as IconKey) ?? "file",
         external: Boolean(doc.external),
       });
       setEditingDocId(doc.id);
@@ -145,61 +201,70 @@ export default function DocumentationSection({
     resetForm();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form.title.trim() || !form.href.trim() || !form.category.trim()) {
       return;
     }
 
-    const iconComponent = ICON_MAP[form.iconKey];
+    const payload = {
+      title: form.title,
+      description: form.description,
+      href: form.href,
+      category: form.category,
+      iconKey: form.iconKey,
+      external: form.external,
+    };
 
-    setDocuments((prev) => {
+    try {
       if (editingDocId) {
-        return prev.map((doc) =>
-          doc.id === editingDocId
-            ? {
-                ...doc,
-                title: form.title,
-                description: form.description,
-                href: form.href,
-                category: form.category,
-                icon: iconComponent,
-                external: form.external,
-              }
-            : doc
+        const updated = await updateDocumentLink(editingDocId, payload);
+        setDocuments((prev) =>
+          sortDocuments(
+            prev.map((doc) => (doc.id === editingDocId ? updated : doc))
+          )
         );
+      } else {
+        const created = await createDocumentLink(payload);
+        setDocuments((prev) => sortDocuments([...prev, created]));
       }
 
-      const newId = (typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `doc-${Date.now()}`) as string;
-
-      return [
-        ...prev,
-        {
-          id: newId,
-          title: form.title,
-          description: form.description,
-          href: form.href,
-          category: form.category,
-          icon: iconComponent,
-          external: form.external,
-        },
-      ];
-    });
-
-    setIsDialogOpen(false);
-    setEditingDocId(null);
+      setIsDialogOpen(false);
+      setEditingDocId(null);
+    } catch (err) {
+      console.error("DocumentationSection: unable to save document", err);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const target = documents.find((doc) => doc.id === id);
     if (!target) return;
     if (!window.confirm(`Supprimer la ressource "${target.title}" ?`)) {
       return;
     }
-    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+    try {
+      await deleteDocumentLink(id);
+      setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+    } catch (err) {
+      console.error("DocumentationSection: unable to delete document", err);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className={cn("flex flex-col gap-12", className)}>
+        <p className="text-white/70">Chargement de la documentation...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("flex flex-col gap-12", className)}>
+        <p className="text-red-300">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-12", className)}>
@@ -272,19 +337,19 @@ export default function DocumentationSection({
             Dossiers projet
           </h2>
           <span className="text-xs text-white/40">
-            {PROJECT_FOLDERS.length} dossiers disponibles
+            {folders.length} dossiers disponibles
           </span>
         </div>
         <div
           className="flex gap-4 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Dossiers de documentation"
         >
-          {PROJECT_FOLDERS.map((folder) => {
+          {folders.map((folder) => {
             type DocEntry = { doc: DocumentLink; note?: string };
 
             const docEntries: DocEntry[] = folder.documents.flatMap(
-              ({ id, note }) => {
-                const doc = documentsById[id];
+              ({ documentId, note }) => {
+                const doc = documentsById[documentId];
                 return doc ? [{ doc, note }] : [];
               }
             );
@@ -338,7 +403,10 @@ export default function DocumentationSection({
                       ) : (
                         <ul className="mt-4 space-y-3">
                           {docEntries.map(({ doc, note }) => {
-                            const Icon = doc.icon;
+                            const Icon =
+                              ICON_MAP[
+                                (doc.iconKey as IconKey) ?? "file"
+                              ] ?? FileText;
                             const external = isExternalLink(
                               doc.href,
                               doc.external
@@ -412,7 +480,10 @@ export default function DocumentationSection({
             </h3>
             <div className="space-y-4">
               {docs.map((doc) => {
-                const Icon = doc.icon;
+                            const Icon =
+                              ICON_MAP[
+                                (doc.iconKey as IconKey) ?? "file"
+                              ] ?? FileText;
                 const external = isExternalLink(doc.href, doc.external);
                 return (
                   <Card
