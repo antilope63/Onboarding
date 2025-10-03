@@ -71,7 +71,9 @@ function computePhaseStats(phases: Phase[]) {
 
   const activePhase = phases[activeIndex];
   const total = activePhase.tasks.length;
-  const done = activePhase.tasks.filter((task) => task.status === "verified").length;
+  const done = activePhase.tasks.filter(
+    (task) => task.status === "verified"
+  ).length;
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
 
   return { activeIndex, done, total, percent };
@@ -84,7 +86,10 @@ export default function Bento_Doug() {
   const canManagePeople = isManager || isRh;
 
   const [phasesState, setPhasesState] = useState<Phase[]>([]);
-  const phaseStats = useMemo(() => computePhaseStats(phasesState), [phasesState]);
+  const phaseStats = useMemo(
+    () => computePhaseStats(phasesState),
+    [phasesState]
+  );
   const activePhase =
     phaseStats.activeIndex !== null
       ? phasesState[phaseStats.activeIndex] ?? null
@@ -183,7 +188,10 @@ export default function Bento_Doug() {
       return;
     }
 
-    if (!selectedMemberId || !teamMembers.some((member) => member.id === selectedMemberId)) {
+    if (
+      !selectedMemberId ||
+      !teamMembers.some((member) => member.id === selectedMemberId)
+    ) {
       setSelectedMemberId(teamMembers[0].id);
     }
   }, [selectedMemberId, teamMembers]);
@@ -247,7 +255,7 @@ export default function Bento_Doug() {
   const highlightDateLabel = highlight?.date ?? "À définir";
   const highlightTitle = highlight?.titre ?? "Aucune réunion planifiée";
   const highlightType = highlight?.type ?? "";
-  const highlightStatus = highlight?.statut ?? "Programmé";
+  const highlightStatus = highlight?.statut ?? "Programmée";
 
   const features: BentoCardProps[] = [
     {
@@ -286,11 +294,11 @@ export default function Bento_Doug() {
                 className="mt-2 space-y-4 overflow-auto pr-1"
                 style={{ maxHeight: "calc(100% - 2rem)" }}
               >
-                {activePhase.tasks.map((t) => (
+                {activePhase.tasks.slice(0, 3).map((t) => (
                   <li
                     key={t.name}
                     className={cn(
-                      "flex items-start justify-between gap-3 rounded-lg border px-3 mx-auto mt-4 py-2 items-center",
+                      "flex justify-between gap-3 rounded-lg border px-3 mx-auto mt-4 py-2 items-center",
                       "bg-white/[0.04] border-white/10",
                       // ✨ animation hover
                       "transition-all duration-300 cursor-pointer",
@@ -343,9 +351,9 @@ export default function Bento_Doug() {
     {
       Icon: GlobeIcon,
       name: "Organigramme",
-      description: "Presentation du personel",
+      description: "Présentation du personnel",
       href: "/organigramme",
-      cta: "Aller voir l'organigramme",
+      cta: "Voir l'organigramme",
       iconColor: Iconcolor,
       nameColor: namecolor,
       ctaColor: ctacolor,
@@ -357,7 +365,9 @@ export default function Bento_Doug() {
       Icon: CalendarIcon,
       name: "Réunion",
       description: highlight
-        ? `Prochaine réunion (${highlightStatus}): ${highlightTitle}${highlightType ? ` (${highlightType})` : ""} – ${highlightDateLabel}`
+        ? `Prochaine réunion (${highlightStatus}): ${highlightTitle}${
+            highlightType ? ` (${highlightType})` : ""
+          } – ${highlightDateLabel}`
         : "Aucune réunion planifiée",
       href: "/Reunion",
       cta: highlight ? "Voir les suivis" : "Programmer un suivi",
@@ -371,7 +381,7 @@ export default function Bento_Doug() {
     {
       Icon: LockClosedIcon,
       name: "Mes accès",
-      description: "Gestion de vos accès",
+      description: "Gestion de tes accès",
       href: "/Acces",
       cta: "Gérer mes accès",
       iconColor: Iconcolor,
@@ -384,7 +394,7 @@ export default function Bento_Doug() {
     {
       Icon: IdCardIcon,
       name: "Mes documents",
-      description: "Vos documents sont tous réunis ici.",
+      description: "Tes documents sont tous réunis ici.",
       href: "/Document",
       cta: "Voir mes documents",
       iconColor: Iconcolor,
@@ -424,7 +434,7 @@ export default function Bento_Doug() {
     {
       Icon: ReaderIcon,
       name: "Documentation",
-      description: "Si tu à des questions c'est ici",
+      description: "Si tu as des questions, c'est ici",
       href: "/documentation",
       cta: "J'ai une question",
       iconColor: Iconcolor,
@@ -454,8 +464,7 @@ export default function Bento_Doug() {
     Icon: () => null,
     name: " ",
     hideCta: true,
-    className:
-      "rounded-2xl lg:col-span-3 lg:row-span-2 border border-white/7",
+    className: "rounded-2xl lg:col-span-3 lg:row-span-2 border border-white/7",
     background: (
       <div className="absolute inset-0 flex flex-col gap-4 bg-gradient-to-br from-[#1B1B37] via-[#1F2245] to-[#25284F] p-6 text-white pointer-events-auto">
         {selectedMember ? (
@@ -506,7 +515,7 @@ export default function Bento_Doug() {
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
           {teamMembers.length > 0 ? (
             teamMembers.map((member) => {
-              const isActive = member.id === selectedMember?.id
+              const isActive = member.id === selectedMember?.id;
               return (
                 <button
                   key={member.id}
@@ -548,7 +557,7 @@ export default function Bento_Doug() {
                     {member.status ?? "Actif"}
                   </span>
                 </button>
-              )
+              );
             })
           ) : (
             <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm text-white/60">
@@ -558,7 +567,7 @@ export default function Bento_Doug() {
         </div>
       </div>
     ),
-  }
+  };
 
   const toolboxCard: BentoCardProps = {
     Icon: BackpackIcon,
@@ -627,14 +636,11 @@ export default function Bento_Doug() {
         </div>
       </div>
     ),
-    className: "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
+    className:
+      "rounded-2xl p-6 lg:col-span-3 lg:row-span-2 border border-white/7",
   };
 
-  features.splice(
-    -1,
-    0,
-    canManagePeople ? peopleCard : toolboxCard
-  );
+  features.splice(-1, 0, canManagePeople ? peopleCard : toolboxCard);
 
   return (
     <div className="relative min-h-[100svh] bg-[#02061B] overflow-hidden">
