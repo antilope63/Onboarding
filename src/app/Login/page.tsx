@@ -1,0 +1,187 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useRouter } from "next/navigation";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
+
+const LoginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email requis")
+    .email("Email invalide")
+    .regex(/@pixelplay\.com$/i, "Utilisez une adresse @pixelplay.com"),
+  password: z.string().nonempty("Mot de passe requis"),
+});
+
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const { setAuth } = useAuth();
+  const form = useForm<z.infer<typeof LoginSchema>>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  function resolveRole(email: string): UserRole {
+    const normalized = email.trim().toLowerCase();
+    if (normalized === "manager@pixelplay.com") return "manager";
+    if (normalized === "rh@pixelplay.com") return "rh";
+    return "user";
+  }
+
+  function onSubmit(values: z.infer<typeof LoginSchema>) {
+    const role = resolveRole(values.email);
+    setAuth({ email: values.email.trim(), role });
+    router.push("/");
+  }
+
+  return (
+    //Fond gradient
+    <div
+      className="h-screen flex items-center justify-end"
+      style={{
+        background: "conic-gradient(from 270deg at 40% 50%, #663bd6, #1d1e3b)",
+      }}
+    >
+      {/* Login form */}
+      <section className="w-1/2 h-full text-center bg-noir flex flex-col justify-center items-center gap-34 p-10 pb-40">
+        <div className="flex flex-col items-center">
+          <div className="flex items-center justify-center gap-5">
+            <p className="text-7xl mb-4" aria-hidden>
+              👋
+            </p>
+            <h1 className="text-5xl text-white font-semibold tracking-tight">
+              Bienvenue chez PixelPlay
+            </h1>
+          </div>
+          <p className="-mt-1 text-sm text-white">
+            Connectez-vous à votre compte pour accéder à votre espace.
+          </p>
+        </div>
+
+        <Form {...form}>
+          <form
+            className="w-full max-w-[400px] text-left"
+            noValidate
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white text-md pl-1">Email</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="email@exemple.com"
+                        className="pr-12 rounded-full h-12 text-white border-0 bg-bleu_fonce_2"
+                        {...field}
+                      />
+                    </FormControl>
+                    <span
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-lg"
+                      aria-hidden
+                    >
+                      ✉️
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "grid transition-[grid-template-rows,margin] duration-200 pl-1 ease-out",
+                      form.formState.errors.email
+                        ? "grid-rows-[1fr] -mt-1.5 mb-3"
+                        : "grid-rows-[0fr] mt-0"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "overflow-hidden transition-opacity duration-200",
+                        form.formState.errors.email
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    >
+                      <FormMessage />
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white text-md pl-1">Mot de passe</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder={showPassword ? "Test123" : "••••••••"}
+                        className="pr-12 rounded-full h-12 text-white border-0 bg-bleu_fonce_2"
+                        {...field}
+                      />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 hover:bg-violet_fonce_1"
+                      aria-label={
+                        showPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }
+                    >
+                      {showPassword ? "🙉" : "🙈"}
+                    </button>
+                  </div>
+                  <div
+                    className={cn(
+                      "grid transition-[grid-template-rows,margin] duration-200 pl-1 ease-out",
+                      form.formState.errors.password
+                        ? "grid-rows-[1fr] -mt-1.5"
+                        : "grid-rows-[0fr] mt-0"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "overflow-hidden transition-opacity duration-200",
+                        form.formState.errors.password
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    >
+                      <FormMessage />
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full cursor-pointer h-12 mt-7 rounded-full text-base font-semibold bg-violet_fonce_1 hover:bg-violet"
+            >
+              Connexion
+            </Button>
+          </form>
+        </Form>
+      </section>
+    </div>
+  );
+}
