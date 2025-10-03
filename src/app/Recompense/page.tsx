@@ -7,6 +7,7 @@ import {
   CheckCircle,
   CheckSquare,
 } from "lucide-react";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "PixelPlay - Intégration terminée 🎉",
@@ -44,13 +45,13 @@ export default function AchievementPage() {
         </div>
 
         {/* Carte principale */}
-        <div className="bg-[#663BD6]/10 p-8 rounded-xl flex flex-col sm:flex-row items-center gap-6 border border-[#663BD6]/30">
-          <div
-            className="w-32 h-32 flex-shrink-0 bg-center bg-cover rounded-lg"
-            style={{
-              backgroundImage:
-                'url("https://ton-site.com/images/achievement.png")',
-            }}
+        <div className="bg-[#663BD6]/10 p-6 rounded-xl flex flex-col sm:flex-row items-center gap-6 border border-[#663BD6]/30">
+          <Image
+            src="/recompense2.png"
+            alt="Avatar"
+            width={128}
+            height={128}
+            className="rounded-lg"
           />
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm font-medium uppercase tracking-wider text-[#7D5AE0]">
@@ -81,12 +82,12 @@ export default function AchievementPage() {
 
         {/* Carte statut employé */}
         <div className="bg-[#1D1E3B] p-6 rounded-xl flex flex-col sm:flex-row items-center gap-6 border border-[#22254C]">
-          <div
-            className="w-32 h-32 flex-shrink-0 bg-center bg-cover rounded-lg"
-            style={{
-              backgroundImage:
-                'url("https://ton-site.com/images/avatar.png")',
-            }}
+          <Image
+            src="/recompense1.png"
+            alt="Avatar"
+            width={128}
+            height={128}
+            className="rounded-lg"
           />
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm font-medium uppercase tracking-wider text-[#7D5AE0]">
