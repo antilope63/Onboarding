@@ -2,7 +2,9 @@
 
 import BackButton from "@/components/BackButton";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 type NavBarProps = {
   classname?: string;
@@ -10,6 +12,8 @@ type NavBarProps = {
 
 export default function NavBar({ classname }: NavBarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { clearAuth, email } = useAuth();
   const segments = (pathname ?? "/").split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1] ?? "";
   const normalized = lastSegment
@@ -31,8 +35,22 @@ export default function NavBar({ classname }: NavBarProps) {
       <BackButton />
 
       <h1 className="text-2xl font-bold text-white">{finalTitle}</h1>
-      {/* pour rpousser correctement le titre au milieu de la navbar */}
-      <div className="w-16 h-4" />
+      <div className="flex items-center gap-2">
+        {email ? (
+          <Button
+            variant="secondary"
+            className="h-8 px-3 cursor-pointer mr-4"
+            onClick={() => {
+              clearAuth();
+              router.replace("/login");
+            }}
+          >
+            Déconnexion
+          </Button>
+        ) : (
+          <div className="w-16 h-4" />
+        )}
+      </div>
     </div>
   );
 }
