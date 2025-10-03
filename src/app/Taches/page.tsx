@@ -27,6 +27,7 @@ import { KanbanView } from "./components/kanban-view"
 import { PhaseModal } from "./components/phase-modal"
 import { PhaseView } from "./components/phase-view"
 import { ViewOption, ViewToggle } from "./components/view-toggle"
+import NavBar from "@/components/NavBar";
 
 type KanbanColumns = Record<
   TaskStatus,
@@ -396,7 +397,7 @@ export default function TasksPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,92,224,0.18),_rgba(8,10,35,0.75))]" />
       <div className="pointer-events-none absolute -top-40 right-[-10%] h-[520px] w-[520px] rounded-full bg-[#7D5AE0]/30 blur-[140px]" />
       <div className="pointer-events-none absolute -bottom-32 left-[-10%] h-[480px] w-[480px] rounded-full bg-[#1D1E3B]/30 blur-[140px]" />
-
+      <NavBar classname="absolute top-0 left-0" />
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 sm:px-6 lg:px-12">
         <header className="flex flex-col gap-6">
           <div>
